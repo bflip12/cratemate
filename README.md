@@ -40,7 +40,18 @@ CrateMate doesn't use file paths from Apple Music. It matches each song by **art
 
 ## Install
 
-There's no prebuilt download yet, so you build it from source. That takes about a minute and doesn't need Xcode or a paid developer account.
+**[Download CrateMate for Mac](https://github.com/bflip12/cratemate/releases/latest/download/CrateMate.dmg)**: free, for Apple silicon and Intel, macOS 14 or later.
+
+1. Open the DMG and drag **CrateMate** onto **Applications**.
+2. Open CrateMate from Applications. CrateMate isn't notarized by Apple yet, so the first time, macOS says it can't verify the app. Click **Done**.
+3. Open **System Settings › Privacy & Security**, scroll down to the message about CrateMate and click **Open Anyway**. Confirm, and CrateMate opens. You only need to do this once per version.
+4. When CrateMate asks to access Apple Music, click **Allow**.
+
+To update, download the new DMG and replace the app. macOS asks for Apple Music access again after each update.
+
+### Build from source
+
+Building takes about a minute and doesn't need Xcode or a paid developer account.
 
 ```bash
 git clone https://github.com/bflip12/cratemate.git

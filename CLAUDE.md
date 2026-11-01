@@ -25,6 +25,9 @@ Read these before changing anything:
 
 - The project builds with the Command Line Tools alone; there's no Xcode project. `scripts/build-app.sh` assembles and ad-hoc signs `build/CrateMate.app` (`--install` copies it to /Applications). The signature lets macOS remember the Media & Apple Music permission.
 - The build script restamps the binary's SDK version with `vtool`. SwiftPM records the deployment target (14.0) as the SDK version, which makes macOS run the app in compatibility mode with the old window chrome. Don't remove that step.
+- The app is universal (`--arch arm64 --arch x86_64`, which works with the Command Line Tools). Ignore SwiftPM's "x86_64 is deprecated for macOS 27.0" warning: the binary's minimum is still 14.0 (check with `vtool -show-build`).
+- `scripts/make-dmg.sh` packs `build/CrateMate.app` into `build/CrateMate-<version>.dmg` and `build/CrateMate.dmg` with `hdiutil`. On macOS 27, `hdiutil` prints deprecation warnings, but the `diskutil image` replacement doesn't exist on the macOS 26 CI runner, so keep `hdiutil`.
+- Pushing a `vX.Y.Z` tag runs `.github/workflows/release.yml`, which publishes the DMG to GitHub Releases. The website links to `releases/latest/download/CrateMate.dmg`, so keep that asset name. Builds are ad-hoc signed until the `APPLE_*` secrets in CONTRIBUTING.md are added.
 - `iTunesLibrary` only works when the .app is launched through LaunchServices (`open build/CrateMate.app`). Running the binary from a shell fails with an XPC or permission error.
 - Use `scripts/test.sh`, not `swift test`. With the Command Line Tools, incremental builds can lose the Swift Testing macro plugin, and the script passes `-plugin-path`.
 - For the end to end test, run `scripts/make-test-library.sh <dir>` (needs ffmpeg), then `scripts/test.sh <dir>`. The expected result is 9 matched and 1 not found ("Nobody - Not In Library").

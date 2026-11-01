@@ -121,6 +121,26 @@ Maintainers only:
 2. In `CHANGELOG.md`, move the **Unreleased** entries under the new version with today's date.
 3. Make these changes on a `release/vX.Y.Z` branch and open a pull request titled "Release vX.Y.Z".
 4. Once it's merged, tag the merge commit on `main` as `vX.Y.Z` and push the tag.
+5. The tag starts the **Release** workflow. It checks that the tag matches `Info.plist` and has a `CHANGELOG.md` section, runs the tests, and builds the universal app with `scripts/build-app.sh`. It then packs the DMG with `scripts/make-dmg.sh` and publishes a GitHub release with that changelog section as its notes. The release has `CrateMate-X.Y.Z.dmg`, its `.sha256`, and `CrateMate.dmg`, which is what `releases/latest/download/CrateMate.dmg` serves.
+6. Update the version and download size on the website.
+
+To try the workflow without publishing a real release, push a tag with a suffix, such as `v0.1.0-rc1`. It becomes a pre-release, which the latest-download link ignores. Delete it afterwards with `gh release delete v0.1.0-rc1 --cleanup-tag`.
+
+To build the DMG locally, run `scripts/build-app.sh`, then `scripts/make-dmg.sh`. The output goes to `build/`.
+
+### Signing and notarization
+
+Releases are signed ad-hoc for now, so on first launch macOS says it can't verify the app, and users click **Open Anyway** in **System Settings › Privacy & Security**. The release notes explain this. To ship notarized builds instead, add these repository secrets. The workflow then signs with Developer ID and notarizes and staples the DMG, with no other changes needed:
+
+| Secret | What it holds |
+|---|---|
+| `APPLE_DEVELOPER_ID_P12` | The Developer ID Application certificate and key, exported as `.p12` and base64-encoded |
+| `APPLE_DEVELOPER_ID_PASSWORD` | The `.p12` export password |
+| `APPLE_NOTARY_KEY` | An App Store Connect API key (`.p8`), base64-encoded |
+| `APPLE_NOTARY_KEY_ID` | That key's ID |
+| `APPLE_NOTARY_ISSUER_ID` | The issuer ID shown with that key |
+
+Locally, `CODESIGN_IDENTITY="Developer ID Application: …" scripts/build-app.sh` signs with the hardened runtime, and `make-dmg.sh` signs the DMG with the same identity.
 
 ## License
 

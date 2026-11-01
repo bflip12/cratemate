@@ -1,0 +1,115 @@
+name: Release
+
+# Push a tag like v0.1.0 to publish a GitHub release with the DMG. A tag with a suffix
+# (v0.1.0-rc1) makes a pre-release, which the website's "latest" download link skips.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+
+jobs:
+  release:
+    name: Build and publish the DMG
+    runs-on: macos-26
+    env:
+      # Developer ID signing and notarization run only once these secrets exist.
+      # Without them the app is signed ad-hoc and users approve it in Privacy & Security.
+      DEVELOPER_ID_P12: ${{ secrets.APPLE_DEVELOPER_ID_P12 }}
+      DEVELOPER_ID_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_PASSWORD }}
+      NOTARY_KEY: ${{ secrets.APPLE_NOTARY_KEY }}
+      NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+      NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check the tag matches the app version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION="${TAG%%-*}"
+          PLIST=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Resources/Info.plist)
+          if [ "$VERSION" != "$PLIST" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match version $PLIST in Resources/Info.plist"
+            exit 1
+          fi
+          if ! grep -q "^## \[$VERSION\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no [$VERSION] section"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Check formatting
+        run: scripts/format.sh --check
+
+      - name: Install ffmpeg
+        run: brew install ffmpeg
+
+      - name: Generate the test library
+        run: scripts/make-test-library.sh "$RUNNER_TEMP/cratemate-test"
+
+      - name: Run unit and end-to-end tests
+        run: scripts/test.sh "$RUNNER_TEMP/cratemate-test"
+
+      - name: Import the Developer ID certificate
+        if: env.DEVELOPER_ID_P12 != ''
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/release.keychain-db"
+          KEYCHAIN_PASSWORD=$(uuidgen)
+          echo "$DEVELOPER_ID_P12" | base64 --decode > "$RUNNER_TEMP/developer-id.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/developer-id.p12" -P "$DEVELOPER_ID_PASSWORD" \
+            -t cert -f pkcs12 -k "$KEYCHAIN" -T /usr/bin/codesign
+          rm "$RUNNER_TEMP/developer-id.p12"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN" \
+            | grep -o '"Developer ID Application: [^"]*"' | head -1 | tr -d '"')
+          [ -n "$IDENTITY" ] || { echo "::error::No Developer ID Application identity in the certificate"; exit 1; }
+          echo "CODESIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+
+      - name: Build the app and disk image
+        run: |
+          scripts/build-app.sh
+          scripts/make-dmg.sh
+
+      - name: Notarize and staple
+        if: env.CODESIGN_IDENTITY != '' && env.NOTARY_KEY != ''
+        run: |
+          echo "$NOTARY_KEY" | base64 --decode > "$RUNNER_TEMP/notary.p8"
+          xcrun notarytool submit "build/CrateMate-$VERSION.dmg" --wait \
+            --key "$RUNNER_TEMP/notary.p8" --key-id "$NOTARY_KEY_ID" --issuer "$NOTARY_ISSUER_ID"
+          rm "$RUNNER_TEMP/notary.p8"
+          xcrun stapler staple "build/CrateMate-$VERSION.dmg"
+          cp "build/CrateMate-$VERSION.dmg" build/CrateMate.dmg
+
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES="$RUNNER_TEMP/notes.md"
+          # This version's CHANGELOG section, without the heading and the link references
+          awk -v v="$VERSION" '/^## \[/ { f = index($0, "## [" v "]") == 1; next } f && !/^\[[^]]+\]: /' \
+            CHANGELOG.md > "$NOTES"
+          if [ -z "${CODESIGN_IDENTITY:-}" ]; then
+            cat >> "$NOTES" <<'EOF'
+
+          ### Opening CrateMate for the first time
+
+          CrateMate isn't notarized by Apple yet, so macOS stops it the first time. Drag it to Applications and open it, then go to **System Settings › Privacy & Security** and click **Open Anyway**. Step by step: https://getcratemate.com/install/
+
+          Each new version asks for Apple Music access again. Click **Allow**.
+          EOF
+          fi
+          (cd build && shasum -a 256 "CrateMate-$VERSION.dmg" > "CrateMate-$VERSION.dmg.sha256")
+          PRERELEASE=()
+          [ "${GITHUB_REF_NAME#v}" != "$VERSION" ] && PRERELEASE=(--prerelease)
+          gh release create "$GITHUB_REF_NAME" "${PRERELEASE[@]}" \
+            --title "CrateMate ${GITHUB_REF_NAME#v}" --notes-file "$NOTES" \
+            "build/CrateMate-$VERSION.dmg" "build/CrateMate-$VERSION.dmg.sha256" build/CrateMate.dmg

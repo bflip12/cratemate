@@ -139,7 +139,7 @@ CrateMate rescans when it starts. Click ↻ next to the DJ folder to rescan now,
 
 ## Contributing
 
-Bug reports, matching edge cases and pull requests are welcome. To get set up, see [CONTRIBUTING.md](CONTRIBUTING.md). For conventions, see [docs/CODE_STYLE.md](docs/CODE_STYLE.md).
+Bug reports, matching edge cases and pull requests are welcome. To get set up, see [CONTRIBUTING.md](CONTRIBUTING.md). For what's planned, see [ROADMAP.md](ROADMAP.md). For conventions, see [docs/CODE_STYLE.md](docs/CODE_STYLE.md).
 
 ## License
 

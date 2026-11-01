@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How to get Apple Music playlists into rekordbox (and keep your cues)</title>
+  <meta name="description" content="A practical guide to moving Apple Music playlists into rekordbox on a Mac: the Library XML and rekordbox's Apple Music tree, where they break with iCloud songs and lost cues, and how to match playlists to your own DJ files instead.">
+  <link rel="canonical" href="https://getcratemate.com/guide/apple-music-to-rekordbox/">
+  <meta name="theme-color" content="#F2ECDC" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1E3A2F" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon-48.png" type="image/png" sizes="48x48">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preload" href="/assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/site.css">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="CrateMate">
+  <meta property="og:title" content="How to get Apple Music playlists into rekordbox">
+  <meta property="og:description" content="The manual routes, where they break, and how to match playlists to the DJ files you already have.">
+  <meta property="og:url" content="https://getcratemate.com/guide/apple-music-to-rekordbox/">
+  <meta property="og:image" content="https://getcratemate.com/assets/social.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:image:alt" content="The CrateMate logo: two sets of rings printed in forest green and yellow, with the cratemate wordmark.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How to get Apple Music playlists into rekordbox">
+  <meta name="twitter:description" content="The manual routes, where they break, and how to match playlists to the DJ files you already have.">
+  <meta name="twitter:image" content="https://getcratemate.com/assets/social.png">
+  <meta name="twitter:image:alt" content="The CrateMate logo: two sets of rings printed in forest green and yellow, with the cratemate wordmark.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "How to get Apple Music playlists into rekordbox (and keep your cues)",
+    "description": "The manual routes from Apple Music to rekordbox, where they break, and how to match playlists to your own DJ files instead.",
+    "image": "https://getcratemate.com/assets/social.png",
+    "datePublished": "2026-10-31",
+    "dateModified": "2026-10-31",
+    "author": {
+      "@type": "Person",
+      "name": "Bobby Filippopoulos"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "CrateMate",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://getcratemate.com/apple-touch-icon.png"
+      }
+    },
+    "mainEntityOfPage": "https://getcratemate.com/guide/apple-music-to-rekordbox/"
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="CrateMate home">
+        <picture>
+          <source srcset="/assets/lockup-horizontal-on-dark.svg" media="(prefers-color-scheme: dark)">
+          <img src="/assets/lockup-horizontal-on-light.svg" width="645" height="118" alt="CrateMate">
+        </picture>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="/#how-it-works">How it works</a>
+        <a href="/guide/apple-music-to-rekordbox/" aria-current="page">Guide</a>
+        <a href="/install/">Install</a>
+        <a href="https://github.com/bflip12/cratemate">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="article">
+    <div class="wrap">
+      <article class="prose">
+        <p class="label">Guide</p>
+        <h1>How to get Apple Music playlists into rekordbox</h1>
+        <p class="byline">On a Mac, keeping your cues and beatgrids. Published 31 October 2026.</p>
+        <p class="lede">A lot of DJs dig in Apple Music: it's where the new releases, the recommendations and the half-finished playlists for Friday live. The sets themselves get played from rekordbox. This guide covers the ways to get a playlist from one to the other, and where each one falls over.</p>
+
+        <nav class="toc" aria-label="On this page">
+          <ol>
+            <li><a href="#goal">What you actually want</a></li>
+            <li><a href="#xml">Route 1: share the Library XML with rekordbox</a></li>
+            <li><a href="#m3u">Route 2: export the playlist as M3U</a></li>
+            <li><a href="#breaks">Where the manual routes break</a></li>
+            <li><a href="#cratemate">Route 3: match the playlist to your DJ files</a></li>
+            <li><a href="#tips">Tips for clean matches</a></li>
+          </ol>
+        </nav>
+
+        <h2 id="goal">What you actually want</h2>
+        <p>Most DJs keep two copies of their music without thinking of it that way. There's the Apple Music library, often in iCloud, and there's a DJ folder of files you bought, tagged, cued and gridded in rekordbox.</p>
+        <p>So the goal isn't really “move the playlist”. It's: <strong>build a rekordbox playlist that points at the files already in your collection</strong>, in the order of the Apple Music playlist. Then every track arrives with its hot cues, memory cues and beatgrid, and nothing in your collection gets doubled.</p>
+
+        <h2 id="xml">Route 1: share the Library XML with rekordbox</h2>
+        <p>rekordbox can show your Apple Music library in its browser, in a tree usually labelled iTunes or Apple Music. It reads this from an XML file that Apple Music writes.</p>
+        <ol>
+          <li>In Apple Music, open <strong>Settings › Files</strong> (called Advanced in some versions) and turn on <strong>Share Library XML with other applications</strong>. Or export one by hand with <strong>File › Library › Export Library…</strong>.</li>
+          <li>In rekordbox, open <strong>Preferences › View › Layout</strong> and turn on the iTunes / Apple Music tree.</li>
+          <li>If you exported the XML by hand, point rekordbox at it under <strong>Preferences › Advanced › Database</strong>.</li>
+          <li>Find your playlist in the tree and drag it into your rekordbox Playlists.</li>
+        </ol>
+        <p>When it works, it's quick. The trouble is what the XML points at: Apple Music's own files, by their location on your Mac.</p>
+
+        <h2 id="m3u">Route 2: export the playlist as M3U</h2>
+        <ol>
+          <li>In Apple Music, select the playlist.</li>
+          <li>Choose <strong>File › Library › Export Playlist…</strong> and set <strong>Format</strong> to <strong>M3U</strong>.</li>
+          <li>In rekordbox, choose <strong>File › Import › Import Playlist</strong> and pick the file.</li>
+        </ol>
+        <p>An M3U is just a list of file paths. Like the XML, they're the paths of Apple Music's copies.</p>
+
+        <h2 id="breaks">Where the manual routes break</h2>
+
+        <h3>Cloud-only songs vanish</h3>
+        <p>If your library syncs through iCloud, most songs aren't on your Mac as files. They have no path, so Apple Music leaves them out. A playlist of 40 streamed or matched songs can export as an M3U with only the <code>#EXTM3U</code> header and nothing else, and the XML tree shows them greyed out or missing. There's a <a href="/guide/apple-music-export-playlist-empty/">separate article on the empty export</a>.</p>
+
+        <h3>You get Apple's copies, not your DJ files</h3>
+        <p>Even for downloaded songs, both routes link to the file inside your Apple Music media folder. That's rarely the file you prepared: maybe it's the AAC from the store while your DJ copy is a WAV from Bandcamp, or a different master altogether. rekordbox treats it as a new track and adds it to your collection.</p>
+
+        <h3>Your cues and grids don't come along</h3>
+        <p>Because rekordbox sees a new file, it has none of your hot cues, memory cues, loops or beatgrid adjustments. You end up re-analysing and re-cueing tracks you've already prepared, or playing the wrong copy without noticing.</p>
+
+        <h3>The wrong version slips in</h3>
+        <p>Store downloads and DJ promos often differ: Radio Edit against Extended Mix, or an Original against a remix with the same title. Nothing in either route checks which cut you meant.</p>
+
+        <h3>Downloaded tracks are protected</h3>
+        <p>Songs downloaded from an Apple Music subscription are protected and can't be played in rekordbox anyway. Only music you own as files will do.</p>
+
+        <h2 id="cratemate">Route 3: match the playlist to your DJ files</h2>
+        <p>The fix is to ignore Apple's file paths altogether and match each song to your own DJ folder by what it is: artist, title, version and length. That's what <a href="/">CrateMate</a> does. It's a free, open-source Mac app, and it works with cloud-only libraries because it never needs the song to be downloaded.</p>
+
+        <h3>1. Install CrateMate</h3>
+        <p><a href="https://github.com/bflip12/cratemate/releases/latest/download/CrateMate.dmg">Download the DMG</a>, drag CrateMate into Applications, and open it. It isn't notarized yet, so the first launch takes one extra click; the <a href="/install/">install page</a> shows where. Click <strong>Allow</strong> when it asks to access Apple Music.</p>
+
+        <h3>2. Choose your DJ folder</h3>
+        <p>Pick the same folder your rekordbox collection uses. This matters: rekordbox links a playlist entry to an existing track only if the path matches exactly. The first scan reads every file's tags, and later scans only read what changed.</p>
+
+        <h3>3. Select your playlists</h3>
+        <p>Your Apple Music playlists, folders and Smart Playlists are in the sidebar. Click one, or ⌘-click to select several.</p>
+
+        <h3>4. Review the matches</h3>
+        <p>Every song gets a mark:</p>
+        <ul class="marks">
+          <li><span class="mark ok">Matched</span> <span>Found with confidence.</span></li>
+          <li><span class="mark check">Check</span> <span>Probably right, but worth a look, such as a close call between an Original and an Extended Mix.</span></li>
+          <li><span class="mark miss">Not found</span> <span>Not in your DJ folder.</span></li>
+        </ul>
+        <p>The <strong>Needs attention</strong> view shows only the songs that aren't a clean match. To fix a row, pick another candidate from its menu, use the search button to look through your DJ folder, or choose <strong>Skip</strong> to leave the song out.</p>
+        <figure class="shot">
+          <img src="/assets/screens/review.svg" width="1100" height="700" alt="Placeholder for a screenshot of the review list, with songs marked matched, worth a check and not found." loading="lazy">
+          <figcaption>The review list, with every song marked.</figcaption>
+        </figure>
+
+        <h3>5. Export</h3>
+        <p>Click <strong>Export</strong>. Each playlist is saved as its own <code>.m3u8</code> in <code>~/Music/CrateMate</code>, with the full path of each of your DJ files. You can change the folder at the bottom of the sidebar.</p>
+
+        <h3>6. Import into rekordbox</h3>
+        <p>In rekordbox, choose <strong>File › Import › Import Playlist</strong> and pick the <code>.m3u8</code>, or drag it onto <strong>Playlists</strong>. Because every path points at a file already in your collection, the playlist links to those tracks, cues and grids included.</p>
+
+        <h2 id="tips">Tips for clean matches</h2>
+        <ul>
+          <li><strong>Tag your DJ files.</strong> Artist and title tags give the best results. Untagged files named like <code>01 - Artist - Title.wav</code> work too.</li>
+          <li><strong>Keep versions in the title.</strong> “(Extended Mix)” or “(Joe Remix)” in the title tag helps tell cuts apart. Track length does the rest.</li>
+          <li><strong>Watch for duplicates.</strong> If the same recording is in your folder twice, CrateMate flags it. Pick the copy rekordbox already has.</li>
+          <li><strong>Use the not-found list as a shopping list.</strong> Anything marked not found is a song you don't own as a file yet.</li>
+          <li><strong>If rekordbox adds new tracks instead of linking</strong>, the DJ folder in CrateMate isn't the one rekordbox points at. Check both, then export again.</li>
+        </ul>
+
+        <div class="cta-box">
+          <p><strong>Try it on your next playlist.</strong> Free, for Apple silicon and Intel Macs on macOS 14 or later.</p>
+          <a class="button" href="https://github.com/bflip12/cratemate/releases/latest/download/CrateMate.dmg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 17v3h16v-3"/></svg>
+            Download for Mac
+          </a>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <nav aria-label="Footer">
+        <a href="/">Home</a>
+        <a href="/install/">Install</a>
+        <a href="/guide/apple-music-to-rekordbox/">Apple Music to rekordbox guide</a>
+        <a href="/guide/apple-music-export-playlist-empty/">Empty playlist export</a>
+        <a href="https://github.com/bflip12/cratemate">GitHub</a>
+      </nav>
+      <p>CrateMate is free and open source under the MIT licence. Set in Geist.</p>
+      <p>Apple Music is a trademark of Apple Inc. rekordbox is a trademark of AlphaTheta Corporation. CrateMate is an independent project and isn't affiliated with or endorsed by either company.</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Apple Music playlist export is empty: why, and how to fix it</title>
+  <meta name="description" content="Exported an Apple Music playlist as M3U and got only #EXTM3U? Here's why cloud-only songs are left out of the export, and three ways to fix it on a Mac.">
+  <link rel="canonical" href="https://getcratemate.com/guide/apple-music-export-playlist-empty/">
+  <meta name="theme-color" content="#F2ECDC" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1E3A2F" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon-48.png" type="image/png" sizes="48x48">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preload" href="/assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/site.css">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="CrateMate">
+  <meta property="og:title" content="Apple Music playlist export is empty: why, and how to fix it">
+  <meta property="og:description" content="Why cloud-only songs are left out of Apple Music's M3U export, and three ways to fix it.">
+  <meta property="og:url" content="https://getcratemate.com/guide/apple-music-export-playlist-empty/">
+  <meta property="og:image" content="https://getcratemate.com/assets/social.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:image:alt" content="The CrateMate logo: two sets of rings printed in forest green and yellow, with the cratemate wordmark.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Apple Music playlist export is empty: why, and how to fix it">
+  <meta name="twitter:description" content="Why cloud-only songs are left out of Apple Music's M3U export, and three ways to fix it.">
+  <meta name="twitter:image" content="https://getcratemate.com/assets/social.png">
+  <meta name="twitter:image:alt" content="The CrateMate logo: two sets of rings printed in forest green and yellow, with the cratemate wordmark.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Apple Music playlist export is empty: why, and how to fix it",
+    "description": "Why cloud-only songs are left out of Apple Music's M3U export, and three ways to fix it on a Mac.",
+    "image": "https://getcratemate.com/assets/social.png",
+    "datePublished": "2026-10-31",
+    "dateModified": "2026-10-31",
+    "author": {
+      "@type": "Person",
+      "name": "Bobby Filippopoulos"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "CrateMate",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://getcratemate.com/apple-touch-icon.png"
+      }
+    },
+    "mainEntityOfPage": "https://getcratemate.com/guide/apple-music-export-playlist-empty/"
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="CrateMate home">
+        <picture>
+          <source srcset="/assets/lockup-horizontal-on-dark.svg" media="(prefers-color-scheme: dark)">
+          <img src="/assets/lockup-horizontal-on-light.svg" width="645" height="118" alt="CrateMate">
+        </picture>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="/#how-it-works">How it works</a>
+        <a href="/guide/apple-music-to-rekordbox/">Guide</a>
+        <a href="/install/">Install</a>
+        <a href="https://github.com/bflip12/cratemate">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="article">
+    <div class="wrap">
+      <article class="prose">
+        <p class="label">Troubleshooting</p>
+        <h1>Why your Apple Music playlist export is empty</h1>
+        <p class="byline">Published 31 October 2026.</p>
+        <p class="lede">You chose File › Library › Export Playlist…, picked M3U, and opened the file. It says <code>#EXTM3U</code> and nothing else. Nothing's broken; here's what's going on.</p>
+
+        <div class="slip" aria-label="An empty playlist export">
+          <span class="file">Friday Warm-Up.m3u</span>
+          <code>#EXTM3U</code><br>
+          <span class="empty">…and that's the whole file.</span>
+        </div>
+
+        <h2 id="why">The short answer: the songs aren't files on your Mac</h2>
+        <p>An M3U playlist is a list of file paths. Apple Music can only write a path for a song that's stored on your Mac as a file. If your library syncs with iCloud, through an Apple Music subscription or iTunes Match, most songs live in the cloud and have no local file, so Apple Music quietly leaves them out.</p>
+        <p>When none of the songs are downloaded, the export comes out with just the header. When some are, you get a playlist with gaps.</p>
+        <p>Songs downloaded from an Apple Music subscription are protected, so even when they do appear in the export, DJ software like rekordbox can't play them.</p>
+
+        <h2 id="fixes">The fixes</h2>
+
+        <h3>1. Download the songs first</h3>
+        <p>Download the playlist in Apple Music (the download button, or right-click › Download), wait for it to finish, then export again. This fills in the paths for music you own, like purchases and uploaded files. It won't help with subscription songs, which stay protected.</p>
+
+        <h3>2. Export as Unicode Text instead</h3>
+        <p>Choose <strong>File › Library › Export Playlist…</strong> and set <strong>Format</strong> to <strong>Unicode Text</strong>. This export lists every song, cloud or not, with its name, artist, album and length, just without file paths. It's handy as a shopping list, or as input for a tool that can match songs to your own files.</p>
+
+        <h3>3. Match the playlist to your DJ files</h3>
+        <p>If what you really want is the playlist in rekordbox, you don't need Apple's files at all. <a href="/">CrateMate</a> is a free Mac app that reads your Apple Music playlists directly, finds each song in your DJ folder by artist, title, version and length, and writes an <code>.m3u8</code> that points at your own files. rekordbox links each entry to the track already in your collection, cues and grids included.</p>
+        <p>It reads the playlist straight from Apple Music, so there's nothing to export. If it can't get access to your library, open a Unicode Text export from fix 2 with <strong>File › Open Playlist Export…</strong> (⌘O).</p>
+
+        <p>The <a href="/guide/apple-music-to-rekordbox/">full Apple Music to rekordbox guide</a> walks through every route step by step.</p>
+
+        <div class="cta-box">
+          <p><strong>Skip the empty export.</strong> Free, for Apple silicon and Intel Macs on macOS 14 or later.</p>
+          <a class="button" href="https://github.com/bflip12/cratemate/releases/latest/download/CrateMate.dmg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 17v3h16v-3"/></svg>
+            Download for Mac
+          </a>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <nav aria-label="Footer">
+        <a href="/">Home</a>
+        <a href="/install/">Install</a>
+        <a href="/guide/apple-music-to-rekordbox/">Apple Music to rekordbox guide</a>
+        <a href="/guide/apple-music-export-playlist-empty/">Empty playlist export</a>
+        <a href="https://github.com/bflip12/cratemate">GitHub</a>
+      </nav>
+      <p>CrateMate is free and open source under the MIT licence. Set in Geist.</p>
+      <p>Apple Music is a trademark of Apple Inc. rekordbox is a trademark of AlphaTheta Corporation. CrateMate is an independent project and isn't affiliated with or endorsed by either company.</p>
+    </div>
+  </footer>
+</body>
+</html>

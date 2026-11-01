@@ -8,6 +8,8 @@ Read these before changing anything:
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): modules, data flow, the matching algorithm and its thresholds.
 - [docs/CODE_STYLE.md](docs/CODE_STYLE.md): conventions, safety rules and UI copy.
 - [CONTRIBUTING.md](CONTRIBUTING.md): build, test and PR workflow.
+- [docs/adr](docs/adr/README.md): the decisions behind the hard rules below. Write a new ADR when you make or reverse a significant decision.
+- [ROADMAP.md](ROADMAP.md): what's planned. Remove items when they ship and add them to the changelog.
 
 ## Hard rules
 

@@ -4,7 +4,7 @@
 
 CrateMate is an organisation tool for a DJ's record collection: it sorts and files, it doesn't make music. The brand should feel analog and printed, calm and a little bit heady. Not childish, not techy, and nothing that looks like a music-making app (waveforms, knobs, faders, play buttons).
 
-[BRIEF.md](BRIEF.md) has the reasoning behind these choices and the directions that were tried and rejected.
+[BRIEF.md](BRIEF.md) explains the reasoning behind these choices and the directions that were tried and rejected.
 
 ## Name
 
@@ -42,7 +42,7 @@ Yellow is never text on Paper or white; it's too faint. Inside the app there's n
 
 ## Type
 
-[Geist](https://vercel.com/font) (OFL), SemiBold for headings and the wordmark, Regular or Medium for text, tracked slightly tight. Use it for brand material: the README header, the social preview, a future website or DMG. The app itself uses the system font.
+[Geist](https://vercel.com/font) (OFL), SemiBold for headings and the wordmark, Regular or Medium for text, tracked slightly tight. Use it for brand material: the README header, the social preview and the website. The app itself uses the system font.
 
 ## Voice
 

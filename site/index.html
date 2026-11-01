@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CrateMate: Apple Music playlists to rekordbox, free for Mac</title>
+  <meta name="description" content="CrateMate is a free, open-source Mac app that turns your Apple Music playlists into rekordbox playlists, matched to the DJ files you already have. Works with iCloud libraries.">
+  <link rel="canonical" href="https://getcratemate.com/">
+  <meta name="theme-color" content="#F2ECDC" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1E3A2F" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon-48.png" type="image/png" sizes="48x48">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preload" href="/assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/site.css">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="CrateMate">
+  <meta property="og:title" content="CrateMate: Apple Music playlists to rekordbox">
+  <meta property="og:description" content="A free Mac app that matches your Apple Music playlists to your own DJ files and writes playlists rekordbox imports.">
+  <meta property="og:url" content="https://getcratemate.com/">
+  <meta property="og:image" content="https://getcratemate.com/assets/social.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:image:alt" content="The CrateMate logo: two sets of rings printed in forest green and yellow, with the cratemate wordmark.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CrateMate: Apple Music playlists to rekordbox">
+  <meta name="twitter:description" content="A free Mac app that matches your Apple Music playlists to your own DJ files and writes playlists rekordbox imports.">
+  <meta name="twitter:image" content="https://getcratemate.com/assets/social.png">
+  <meta name="twitter:image:alt" content="The CrateMate logo: two sets of rings printed in forest green and yellow, with the cratemate wordmark.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "CrateMate",
+    "description": "A free, open-source Mac app that matches Apple Music playlists to a DJ's local files and writes .m3u8 playlists that rekordbox imports.",
+    "url": "https://getcratemate.com/",
+    "image": "https://getcratemate.com/assets/social.png",
+    "operatingSystem": "macOS 14",
+    "applicationCategory": "MultimediaApplication",
+    "softwareVersion": "0.1.0",
+    "fileSize": "1.9MB",
+    "downloadUrl": "https://github.com/bflip12/cratemate/releases/latest/download/CrateMate.dmg",
+    "license": "https://opensource.org/licenses/MIT",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "Bobby Filippopoulos"
+    },
+    "codeRepository": "https://github.com/bflip12/cratemate"
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="CrateMate home">
+        <picture>
+          <source srcset="/assets/lockup-horizontal-on-dark.svg" media="(prefers-color-scheme: dark)">
+          <img src="/assets/lockup-horizontal-on-light.svg" width="645" height="118" alt="CrateMate">
+        </picture>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="/#how-it-works">How it works</a>
+        <a href="/guide/apple-music-to-rekordbox/">Guide</a>
+        <a href="/install/">Install</a>
+        <a href="https://github.com/bflip12/cratemate">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="wrap">
+        <div>
+          <p class="eyebrow">Free Mac app for DJs</p>
+          <h1 id="hero-title">Your Apple Music playlists, in rekordbox, using your own files.</h1>
+          <p class="lede">CrateMate reads your Apple Music playlists, finds each song in your DJ folder by artist, title, version and length, and writes a playlist rekordbox imports. Your cues and beatgrids stay put.</p>
+          <p>
+            <a class="button" href="https://github.com/bflip12/cratemate/releases/latest/download/CrateMate.dmg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 17v3h16v-3"/></svg>
+              Download for Mac
+            </a>
+          </p>
+          <ul class="meta" aria-label="Download details">
+            <li>Free and open source</li>
+            <li>Apple silicon and Intel</li>
+            <li>macOS 14 or later</li>
+            <li>Version 0.1.0, 1.9 MB</li>
+          </ul>
+          <p class="meta"><a href="/install/">First time opening it? Here's how to install.</a></p>
+        </div>
+        <div class="hero-art">
+          <picture>
+            <source srcset="/assets/mark-on-dark.svg" media="(prefers-color-scheme: dark)">
+            <img src="/assets/mark-on-light.svg" width="632" height="632" alt="">
+          </picture>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="problem-title">
+      <div class="wrap split">
+        <div class="prose">
+          <p class="label">The problem</p>
+          <h2 id="problem-title">Apple Music exports an empty playlist</h2>
+          <p>You dig in Apple Music and play from rekordbox. Getting a playlist from one to the other should be easy. Apple Music can export a playlist as M3U, but only for songs stored on your Mac. If your library lives in iCloud, you get a header and nothing else.</p>
+          <p>Even when the files are local, they're Apple's copies, not the ones you've tagged, cued and gridded in rekordbox. Import those and you end up with doubles in your collection.</p>
+          <p><a href="/guide/apple-music-export-playlist-empty/">Why the export comes out empty, and the fixes</a></p>
+        </div>
+        <div class="slip" aria-label="An empty playlist export">
+          <span class="file">Friday Warm-Up.m3u</span>
+          <code>#EXTM3U</code><br>
+          <span class="empty">…and that's the whole file.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="how-it-works" aria-labelledby="how-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="label">How it works</p>
+          <h2 id="how-title">Three steps from playlist to crate</h2>
+          <p>CrateMate doesn't use file paths from Apple Music. It matches on the music itself, so it works with cloud-only libraries.</p>
+        </div>
+        <ol class="steps">
+          <li>
+            <h3>Choose your DJ folder</h3>
+            <p>Point CrateMate at the folder your rekordbox collection uses. The first scan reads every file's tags; after that it only reads what changed.</p>
+          </li>
+          <li>
+            <h3>Pick playlists and review</h3>
+            <p>Select playlists in the sidebar. Every song is marked matched, worth a check or not found, and you can fix any of them.</p>
+          </li>
+          <li>
+            <h3>Export and import</h3>
+            <p>Click Export to save an <code>.m3u8</code> for each playlist, then in rekordbox choose File › Import › Import Playlist.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="look-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="label">A look inside</p>
+          <h2 id="look-title">It shows its work</h2>
+          <p>Nothing goes in the playlist without you seeing it first. By default you only see the songs that need a look.</p>
+        </div>
+        <div class="shots">
+          <figure class="shot">
+            <img src="/assets/screens/review.svg" width="1100" height="700" alt="Placeholder for a screenshot of the review list, with songs marked matched, worth a check and not found." loading="lazy">
+            <figcaption>The review list. Green is matched, orange is worth a check, red isn't in your DJ folder.</figcaption>
+          </figure>
+          <div class="shot-pair">
+            <figure class="shot">
+              <img src="/assets/screens/menu.svg" width="800" height="560" alt="Placeholder for a screenshot of a row's menu, listing other candidate files with their match scores." loading="lazy">
+              <figcaption>Not the cut you wanted? Pick another candidate, search your DJ folder, or skip it.</figcaption>
+            </figure>
+            <figure class="shot">
+              <img src="/assets/screens/export.svg" width="800" height="560" alt="Placeholder for a screenshot of the export confirmation, ready to import into rekordbox." loading="lazy">
+              <figcaption>One <code>.m3u8</code> per playlist, saved to Music › CrateMate and ready for rekordbox.</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="features-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="label">Features</p>
+          <h2 id="features-title">Built for the way DJs keep music</h2>
+        </div>
+        <ul class="features">
+          <li>
+            <h3>Reads Apple Music directly</h3>
+            <p>Nothing to export first. Playlist folders and Smart Playlists are included, and iCloud libraries work.</p>
+          </li>
+          <li>
+            <h3>Finds your copy</h3>
+            <p>Not Apple's file: the one you prepared for your sets, already in your rekordbox collection with its cues and grids.</p>
+          </li>
+          <li>
+            <h3>Picks the right cut</h3>
+            <p>Track length tells an Extended Mix from an Original Mix or a Radio Edit with the same title.</p>
+          </li>
+          <li>
+            <h3>Forgives messy tags</h3>
+            <p>Accents and non-Latin scripts, “&amp;” or “and”, “feat.” in the title or the artist, typos, and untagged files named like <code>01 - Artist - Title.wav</code>.</p>
+          </li>
+          <li>
+            <h3>Flags duplicates</h3>
+            <p>If the same recording is in your DJ folder twice, CrateMate tells you, so the playlist points at the copy rekordbox knows.</p>
+          </li>
+          <li>
+            <h3>Quick after the first scan</h3>
+            <p>Tags are cached, so later scans only read new or changed files.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="promise-title">
+      <div class="wrap">
+        <div class="promise">
+          <img src="/assets/icon-192.png" width="192" height="192" alt="" loading="lazy">
+          <div>
+            <h2 id="promise-title">It never touches your files</h2>
+            <p>rekordbox keeps track of your music by where each file lives, so moving or renaming one breaks your cues. CrateMate only ever reads your DJ folder. Nothing is moved, renamed or retagged. All it writes are the playlist files you export.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="privacy" aria-labelledby="privacy-title">
+      <div class="wrap split">
+        <div class="prose">
+          <p class="label">Privacy</p>
+          <h2 id="privacy-title">Everything stays on your Mac</h2>
+          <p>CrateMate makes no network requests and collects no analytics. There's no account and nothing to sign in to.</p>
+        </div>
+        <div class="prose">
+          <h3>What it reads</h3>
+          <p>Your Apple Music library's song details, and the tags of the audio files in the DJ folder you choose.</p>
+          <h3>What it writes</h3>
+          <p>The <code>.m3u8</code> files you export, and a tag cache in <code>~/Library/Application Support/CrateMate</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq" aria-labelledby="faq-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="label">Questions</p>
+          <h2 id="faq-title">Before you dig in</h2>
+        </div>
+        <div class="faq">
+          <h3>Does it work if my Apple Music library is in iCloud?</h3>
+          <p>Yes. That's what it's for. CrateMate reads the song details, not the files, and matches them against your DJ folder, so songs don't need to be downloaded.</p>
+
+          <h3>Will I keep my cue points and beatgrids?</h3>
+          <p>Yes, as long as the DJ folder in CrateMate is the one your rekordbox collection uses. The playlist points at files rekordbox already knows, so it links to the tracks you've prepared instead of adding new ones.</p>
+
+          <h3>Does it download or buy music?</h3>
+          <p>No. It only matches songs you already own as files. Songs it can't find are marked not found, so you know what to pick up.</p>
+
+          <h3>What if it picks the wrong file?</h3>
+          <p>Choose the right one from the row's menu, or search your DJ folder from the row. Close calls, like an Original against an Extended Mix, are flagged for a check.</p>
+
+          <h3>Why does macOS say it can't verify the app?</h3>
+          <p>CrateMate isn't notarized by Apple yet, so the first launch takes one extra click in System Settings. The <a href="/install/">install guide</a> walks you through it.</p>
+
+          <h3>Which Macs does it run on?</h3>
+          <p>Any Mac with Apple silicon or Intel running macOS 14 Sonoma or later.</p>
+
+          <h3>Does it work with Serato, Traktor or Engine DJ?</h3>
+          <p>CrateMate writes standard <code>.m3u8</code> playlists with full file paths, and it's built and tested for rekordbox. Other apps that import M3U may work too, but they aren't tested.</p>
+
+          <h3>What does it cost?</h3>
+          <p>Nothing. CrateMate is free and open source under the MIT licence.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="source-title">
+      <div class="wrap split">
+        <div class="prose">
+          <p class="label">Open source</p>
+          <h2 id="source-title">Read the code, file a wrong match</h2>
+          <p>CrateMate is a small native SwiftUI app with no third-party dependencies. The source, the matching rules and the issue tracker are on GitHub. If it gets a title wrong, a report with the song and the file it should have picked helps the most.</p>
+          <p><a href="https://github.com/bflip12/cratemate">bflip12/cratemate on GitHub</a></p>
+        </div>
+        <div class="cta-box">
+          <p><strong>Ready to fill a crate?</strong></p>
+          <a class="button" href="https://github.com/bflip12/cratemate/releases/latest/download/CrateMate.dmg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 17v3h16v-3"/></svg>
+            Download for Mac
+          </a>
+          <ul class="meta" aria-label="Download details">
+            <li>Free</li>
+            <li>macOS 14 or later</li>
+            <li><a href="/install/">Install help</a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <nav aria-label="Footer">
+        <a href="/">Home</a>
+        <a href="/install/">Install</a>
+        <a href="/guide/apple-music-to-rekordbox/">Apple Music to rekordbox guide</a>
+        <a href="/guide/apple-music-export-playlist-empty/">Empty playlist export</a>
+        <a href="https://github.com/bflip12/cratemate">GitHub</a>
+      </nav>
+      <p>CrateMate is free and open source under the MIT licence. Set in Geist.</p>
+      <p>Apple Music is a trademark of Apple Inc. rekordbox is a trademark of AlphaTheta Corporation. CrateMate is an independent project and isn't affiliated with or endorsed by either company.</p>
+    </div>
+  </footer>
+</body>
+</html>

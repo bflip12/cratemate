@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Install CrateMate on your Mac: first launch and Open Anyway</title>
+  <meta name="description" content="How to install CrateMate and open it the first time. macOS says it can't verify the app because it isn't notarized yet; here's the Open Anyway step in Privacy &amp; Security.">
+  <link rel="canonical" href="https://getcratemate.com/install/">
+  <meta name="theme-color" content="#F2ECDC" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1E3A2F" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon-48.png" type="image/png" sizes="48x48">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preload" href="/assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/site.css">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="CrateMate">
+  <meta property="og:title" content="Install CrateMate on your Mac">
+  <meta property="og:description" content="Drag it to Applications, then one extra click the first time you open it.">
+  <meta property="og:url" content="https://getcratemate.com/install/">
+  <meta property="og:image" content="https://getcratemate.com/assets/social.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:image:alt" content="The CrateMate logo: two sets of rings printed in forest green and yellow, with the cratemate wordmark.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Install CrateMate on your Mac">
+  <meta name="twitter:description" content="Drag it to Applications, then one extra click the first time you open it.">
+  <meta name="twitter:image" content="https://getcratemate.com/assets/social.png">
+  <meta name="twitter:image:alt" content="The CrateMate logo: two sets of rings printed in forest green and yellow, with the cratemate wordmark.">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="CrateMate home">
+        <picture>
+          <source srcset="/assets/lockup-horizontal-on-dark.svg" media="(prefers-color-scheme: dark)">
+          <img src="/assets/lockup-horizontal-on-light.svg" width="645" height="118" alt="CrateMate">
+        </picture>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="/#how-it-works">How it works</a>
+        <a href="/guide/apple-music-to-rekordbox/">Guide</a>
+        <a href="/install/" aria-current="page">Install</a>
+        <a href="https://github.com/bflip12/cratemate">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="article">
+    <div class="wrap">
+      <article class="prose">
+        <p class="label">Install</p>
+        <h1>Installing CrateMate</h1>
+        <p class="lede">Drag it to Applications, then give it one extra click the first time you open it. About a minute, start to finish.</p>
+
+        <div class="cta-box">
+          <a class="button" href="https://github.com/bflip12/cratemate/releases/latest/download/CrateMate.dmg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 17v3h16v-3"/></svg>
+            Download for Mac
+          </a>
+          <ul class="meta" aria-label="Download details">
+            <li>Free</li>
+            <li>Apple silicon and Intel</li>
+            <li>macOS 14 or later</li>
+            <li>Version 0.1.0, 1.9 MB</li>
+          </ul>
+        </div>
+
+        <h2 id="why">Why there's an extra step</h2>
+        <p>Apps from outside the App Store are normally notarized: Apple scans them and vouches for the developer. CrateMate isn't notarized yet, so macOS can't check who made it and won't open it with a double-click the first time. You tell it once that you trust the app, and after that it opens like any other.</p>
+        <p>CrateMate is open source, so you can read every line of what it does on <a href="https://github.com/bflip12/cratemate">GitHub</a>, or <a href="https://github.com/bflip12/cratemate#build-from-source">build it yourself</a>.</p>
+
+        <h2 id="steps">Step by step</h2>
+        <ol>
+          <li><strong>Open the DMG</strong> and drag <strong>CrateMate</strong> onto <strong>Applications</strong>.</li>
+          <li><strong>Open CrateMate from Applications.</strong> The first time, macOS says “Apple could not verify ‘CrateMate’ is free of malware…”. Click <strong>Done</strong>, not Move to Trash.</li>
+          <li><strong>Open System Settings › Privacy &amp; Security.</strong> Scroll down to the Security section, where there's a message saying CrateMate was blocked. Click <strong>Open Anyway</strong>.</li>
+          <li><strong>Confirm</strong> with your password or Touch ID, then click <strong>Open Anyway</strong> once more. CrateMate opens.</li>
+          <li><strong>Allow Apple Music access.</strong> When CrateMate asks to access Apple Music, click <strong>Allow</strong>. That's how it reads your playlists.</li>
+        </ol>
+        <p>You only need to do this once per version.</p>
+
+        <div class="callout">
+          <p><strong>On macOS 14 Sonoma</strong> you can also right-click CrateMate in Applications, choose <strong>Open</strong>, then click <strong>Open</strong> in the dialog. From macOS 15 Sequoia on, use System Settings as above.</p>
+        </div>
+
+        <h2 id="terminal">If you're comfortable in Terminal</h2>
+        <p>You can skip the Settings round trip by clearing the quarantine flag macOS puts on downloaded apps. Run this after dragging CrateMate to Applications:</p>
+        <pre><code>xattr -dr com.apple.quarantine /Applications/CrateMate.app</code></pre>
+
+        <h2 id="updating">Updating</h2>
+        <p>Download the new DMG and drag CrateMate onto Applications again, replacing the old copy. Your DJ folder and export settings carry over.</p>
+        <p>Each update asks for Apple Music access again, because macOS sees an unnotarized app's new version as a new app. Click <strong>Allow</strong> and you're set.</p>
+
+        <h2 id="trouble">If something's not right</h2>
+        <h3>“Couldn't read your Apple Music library”</h3>
+        <p>Allow CrateMate in <strong>System Settings › Privacy &amp; Security › Media &amp; Apple Music</strong>, then quit and reopen it. If CrateMate isn't listed there, reset the permission so macOS asks again:</p>
+        <pre><code>tccutil reset MediaLibrary com.bobbyf.cratemate</code></pre>
+        <p>You can always fall back to a playlist exported from Apple Music as Unicode Text: in CrateMate, choose <strong>File › Open Playlist Export…</strong> (⌘O).</p>
+
+        <h3>There's no Open Anyway button</h3>
+        <p>The button only shows for about an hour after macOS blocks the app. Open CrateMate from Applications again, click <strong>Done</strong>, and go straight back to Privacy &amp; Security.</p>
+
+        <p>Still stuck? <a href="https://github.com/bflip12/cratemate/issues/new/choose">Open an issue on GitHub</a> with your macOS version and what you see.</p>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <nav aria-label="Footer">
+        <a href="/">Home</a>
+        <a href="/install/">Install</a>
+        <a href="/guide/apple-music-to-rekordbox/">Apple Music to rekordbox guide</a>
+        <a href="/guide/apple-music-export-playlist-empty/">Empty playlist export</a>
+        <a href="https://github.com/bflip12/cratemate">GitHub</a>
+      </nav>
+      <p>CrateMate is free and open source under the MIT licence. Set in Geist.</p>
+      <p>Apple Music is a trademark of Apple Inc. rekordbox is a trademark of AlphaTheta Corporation. CrateMate is an independent project and isn't affiliated with or endorsed by either company.</p>
+    </div>
+  </footer>
+</body>
+</html>

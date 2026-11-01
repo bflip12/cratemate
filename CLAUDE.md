@@ -34,6 +34,13 @@ Read these before changing anything:
 - Run `scripts/format.sh` before committing. CI runs `scripts/format.sh --check`, and swift-format requires doc comments on every `public` declaration in `CrateMateCore`.
 - The app icon is drawn in code by `scripts/make-icon.swift`. Run `scripts/make-icon.sh` after changing it and commit the outputs. Brand guidelines and logo files are in [docs/brand](docs/brand/README.md).
 
+## Website
+
+- The project website lives in `site/`: plain HTML and CSS, no build step, no JavaScript, no third-party requests or analytics. Preview it with `python3 -m http.server -d site`.
+- `.github/workflows/pages.yml` deploys it to GitHub Pages on pushes to `main` that touch `site/`. Keep `site/CNAME`.
+- The version and download size on the home page (text and JSON-LD) and the install page are hand-written. Update them at each release, as CONTRIBUTING.md's Releasing section says.
+- Every page repeats the header and footer; keep the trademark disclaimer in each footer. Show Apple Music and rekordbox as text only, never logos.
+
 ## Status
 
 The matcher is tested against the generated fake library only. It hasn't yet been checked against a large real-world DJ folder or a real Rekordbox import, so treat changes to scoring and thresholds with care. Add a test for each real-world case.

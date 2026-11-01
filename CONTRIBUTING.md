@@ -80,6 +80,7 @@ CI runs `scripts/format.sh --check` and fails on any difference.
 | `scripts/` | Build, test, format, test-library and icon scripts. |
 | `docs/` | Architecture and code style. |
 | `docs/brand/` | The logo, wordmark, lockups and brand guidelines. See its [README](docs/brand/README.md). |
+| `site/` | The project website, [getcratemate.com](https://getcratemate.com). See [Website](#website). |
 
 ## Making a change
 
@@ -113,6 +114,20 @@ The most useful bug reports for the matcher are concrete pairs. For each one, in
 
 Please don't attach audio files. The metadata is all that's needed.
 
+## Website
+
+The website at [getcratemate.com](https://getcratemate.com) lives in `site/`. It's plain HTML and CSS with no build step, no JavaScript and no third-party requests. The stylesheet is `site/assets/site.css`, and the Geist font is self-hosted in `site/assets/fonts/` under its OFL licence. Each page repeats the same header and footer, so change them on every page.
+
+To preview it, serve the folder and open <http://localhost:8000>:
+
+```bash
+python3 -m http.server -d site
+```
+
+The **Website** workflow (`.github/workflows/pages.yml`) deploys `site/` to GitHub Pages when a change to it reaches `main`, and can be run by hand from the Actions tab. `site/CNAME` holds the custom domain.
+
+The version number and download size on the home page and the install page are written by hand, so update them at each release. When you add a page, add it to `site/sitemap.xml`.
+
 ## Releasing
 
 Maintainers only:
@@ -122,7 +137,7 @@ Maintainers only:
 3. Make these changes on a `release/vX.Y.Z` branch and open a pull request titled "Release vX.Y.Z".
 4. Once it's merged, tag the merge commit on `main` as `vX.Y.Z` and push the tag.
 5. The tag starts the **Release** workflow. It checks that the tag matches `Info.plist` and has a `CHANGELOG.md` section, runs the tests, and builds the universal app with `scripts/build-app.sh`. It then packs the DMG with `scripts/make-dmg.sh` and publishes a GitHub release with that changelog section as its notes. The release has `CrateMate-X.Y.Z.dmg`, its `.sha256`, and `CrateMate.dmg`, which is what `releases/latest/download/CrateMate.dmg` serves.
-6. Update the version and download size on the website.
+6. Update the version and download size on the website: the home page (including its JSON-LD) and the install page. See [Website](#website).
 
 To try the workflow without publishing a real release, push a tag with a suffix, such as `v0.1.0-rc1`. It becomes a pre-release, which the latest-download link ignores. Delete it afterwards with `gh release delete v0.1.0-rc1 --cleanup-tag`.
 

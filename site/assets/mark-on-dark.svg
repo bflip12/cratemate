@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="196 196 632 632" width="632" height="632">
+  <title>Logo mark, for dark backgrounds</title>
+  <!-- The app icon's rings without the sheet: two inks, the second overprinted (multiply) and slightly off register. -->
+  <g fill="none" stroke-width="20" style="isolation:isolate">
+    <g stroke="#F2ECDC"><circle cx="446" cy="512" r="44.4"/><circle cx="446" cy="512" r="88.8"/><circle cx="446" cy="512" r="133.2"/><circle cx="446" cy="512" r="177.6"/><circle cx="446" cy="512" r="222.0"/></g>
+    <g stroke="#F5D000" style="mix-blend-mode:multiply"><circle cx="582" cy="515.3" r="44.4"/><circle cx="582" cy="515.3" r="88.8"/><circle cx="582" cy="515.3" r="133.2"/><circle cx="582" cy="515.3" r="177.6"/><circle cx="582" cy="515.3" r="222.0"/></g>
+  </g>
+</svg>

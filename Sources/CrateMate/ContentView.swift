@@ -279,7 +279,8 @@ struct TrackRow: View {
                     Text("Skip").tag(String?.none)
                 }
                 .labelsHidden()
-                .frame(maxWidth: .infinity)  // same width on every row, not sized to the label
+                .fillWidth()
+                .frame(maxWidth: .infinity, alignment: .trailing)
                 HStack(spacing: 4) {
                     if row.pick == row.result.best?.track.file, !row.result.dupes.isEmpty {
                         Image(systemName: "doc.on.doc")
@@ -378,5 +379,13 @@ struct LibrarySearch: View {
         }
         .padding(12)
         .frame(width: 420)
+    }
+}
+
+extension View {
+    /// Stretches a menu picker to the width it's offered, so every row's picker is the same size.
+    /// Before macOS 26 a menu picker always sizes to its label.
+    @ViewBuilder fileprivate func fillWidth() -> some View {
+        if #available(macOS 26, *) { buttonSizing(.flexible) } else { self }
     }
 }

@@ -28,6 +28,7 @@ flowchart LR
 | `Normalize.swift` | Normalises text, splits titles and guesses tags from filenames. |
 | `Matcher.swift` | Scores songs against library files (`LibraryIndex`). |
 | `M3U.swift` | Writes the `.m3u8`. |
+| `Picks.swift` | Remembers the user's picks between launches (`PickStore`). |
 
 ### Reading Apple Music
 
@@ -96,6 +97,15 @@ Two files count as **the same recording** if their core titles and version token
 
 `search(_:limit:)` backs the 🔍 popover. It splits the query into words and keeps files where any query word is a prefix of a word in the artist, title or filename. Results are ranked by the share of query words that hit, then by title.
 
+### Remembering picks
+
+`PickStore` saves what the user decided for each song in `~/Library/Application Support/CrateMate/picks.json`: the chosen file, or a skip. Picks are keyed by song, not by playlist: the key is the normalised artist and title (`PickStore.key(for:)`), so a song fixed in one playlist is fixed in every other. Length isn't part of the key, because Apple Music and its text export round it differently. [ADR 0010](adr/0010-remember-picks-by-song.md) explains the choice.
+
+After each scan, `restore(_:result:in:)` decides whether a saved pick still applies:
+
+- A chosen file applies while it's still in the DJ folder. If it's gone, the matcher's own pick is used.
+- A skip applies while the matcher's best file is the one it was when the song was skipped. If a new file now scores best, the skip is dropped and the row needs attention again, so a song added to the DJ folder later isn't silently left out.
+
 ### Writing the playlist
 
 `m3uText` writes extended M3U in UTF-8 with LF line endings:
@@ -114,13 +124,15 @@ The duration is in whole seconds, or `-1` if unknown. `writeM3U` names the file 
 |---|---|
 | `AppModel` | The single `@MainActor @Observable` state object: settings, playlists, scan state, the `LibraryIndex`, reviews per playlist, and export. |
 | `PlaylistReview` | The match results for one playlist. Built the first time the playlist is selected after a scan. |
-| `RowReview` | One song. `pick` is the chosen file path, or `nil` to skip it. `touched` records whether the user changed it. |
+| `RowReview` | One song. `pick` is the chosen file path, or `nil` to skip it. `decided` records whether the user has chosen a file, skipped the song or kept the suggested match, here, in another playlist or in an earlier session. `state` combines the two with the match status, and drives the row's icon and the header counts. |
 | `ContentView` and others | Sidebar (playlists, with Apple Music folders as collapsible rows, plus the DJ and output folder footer), detail (scan progress or the review list), toolbar (filter and Export), and the Settings window. |
 
 How the app behaves:
 
 - Apple Music reading, scanning and matching run off the main actor with `Task.detached` or `async` core functions. Results are assigned back on the main actor.
-- A rescan clears `reviews`, because the picks were made against the old index.
+- A rescan clears `reviews` and rebuilds them against the new index, restoring saved picks.
+- Every decision goes through `AppModel.decide(_:_:)`. It saves the pick and applies it to the same song in every loaded playlist. "Needs attention" shows only rows that aren't `ok` and aren't decided yet, so the list gets shorter as the user works through it. "Accept All" decides every remaining row in a playlist with its current pick.
+- A row's state follows from the saved picks: `setPicks` writes them, then re-applies `PickStore.restore` to every loaded row of the same songs. Undo (⌘Z, through the window's `UndoManager`) puts the previous saved picks back the same way. Rows are found by song, not kept from before, so undo still works after a rescan rebuilds them. Forget All Picks clears the undo stack.
 - Settings live in `UserDefaults`: `library` (the DJ folder) and `output` (the export folder, `~/Music/CrateMate` by default). If either is unset, `AppModel` falls back to the value saved under the app's old bundle identifier, `com.bobbyf.am2rb`, so settings carry over from before the rename. `expandFolders` sets whether Apple Music folders start expanded in the sidebar (collapsed by default). Folders are outline rows (`DisclosureGroup`) under one Playlists section, and they all open while the playlist filter has text.
 - **UI state lives on the model objects**, not in `@State`. Examples are `RowReview.searching` and `AppModel.playlistFilter`. See [CODE_STYLE.md](CODE_STYLE.md#swiftui) for why.
 

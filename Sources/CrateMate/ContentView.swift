@@ -5,6 +5,7 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.undoManager) private var undoManager
 
     var body: some View {
         @Bindable var model = model
@@ -14,6 +15,8 @@ struct ContentView: View {
         } detail: {
             Detail()
         }
+        .onAppear { model.undoManager = undoManager }
+        .onChange(of: undoManager) { model.undoManager = undoManager }
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Picker("Show", selection: $model.showAll) {
@@ -151,10 +154,31 @@ struct SettingsView: View {
             Text("How Apple Music folders appear in the sidebar when CrateMate opens.")
                 .font(.callout).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+
+            LabeledContent("Picks:") {
+                Button("Forget All Picks…") { model.confirmingForgetPicks = true }
+                    .disabled(model.picks.count == 0)
+            }
+            .padding(.top, 12)
+            Text(
+                "CrateMate remembers the files you choose and the songs you skip, in every playlist."
+                    + (model.picks.count == 0 ? "" : " \(songs(model.picks.count)) so far.")
+            )
+            .font(.callout).foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
         }
         .padding(20)
         .frame(width: 420)
+        .confirmationDialog(
+            "Forget your picks for \(songs(model.picks.count))?", isPresented: $model.confirmingForgetPicks
+        ) {
+            Button("Forget Picks", role: .destructive) { model.forgetPicks() }
+        } message: {
+            Text("Every song goes back to CrateMate's own match. You can't undo this.")
+        }
     }
+
+    private func songs(_ n: Int) -> String { n == 1 ? "1 song" : "\(n) songs" }
 }
 
 struct SidebarFooter: View {
@@ -270,6 +294,7 @@ struct ReviewList: View {
 }
 
 struct PlaylistSection: View {
+    @Environment(AppModel.self) private var model
     let review: PlaylistReview
     let showAll: Bool
 
@@ -277,8 +302,11 @@ struct PlaylistSection: View {
         let rows = showAll ? review.rows : review.rows.filter(\.needsAttention)
         Section {
             if rows.isEmpty {
-                Label("Everything matched", systemImage: "checkmark.circle")
-                    .foregroundStyle(.secondary)
+                Label(
+                    review.rows.allSatisfy { $0.result.status == .ok } ? "Everything matched" : "Nothing left to check",
+                    systemImage: "checkmark.circle"
+                )
+                .foregroundStyle(.secondary)
             }
             ForEach(rows) { TrackRow(row: $0) }
         } header: {
@@ -286,16 +314,27 @@ struct PlaylistSection: View {
                 Text(review.playlist.name).font(.headline).foregroundStyle(.primary)
                 Spacer()
                 Group {
-                    Label("\(review.count(.ok))", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                    Label("\(review.count(.matched))", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
                         .help("Matched")
                     Label("\(review.count(.check))", systemImage: "questionmark.circle.fill").foregroundStyle(.orange)
                         .help("Probably right, worth a check")
                     Label("\(review.count(.missing))", systemImage: "xmark.circle.fill").foregroundStyle(.red)
                         .help("Not found in your DJ folder")
+                    if review.count(.skipped) > 0 {
+                        Label("\(review.count(.skipped))", systemImage: "minus.circle").foregroundStyle(.secondary)
+                            .help("Skipped")
+                    }
                 }
                 .labelStyle(.titleAndIcon)
                 Text("\(review.exportTracks.count) of \(review.rows.count) in export")
                     .foregroundStyle(.secondary)
+                if review.leftToCheck > 0 {
+                    Button("Accept All") {
+                        withAnimation { model.acceptAll(in: review) }
+                    }
+                    .controlSize(.small)
+                    .help("Keep the current choice for every song left to check")
+                }
             }
             .font(.callout.monospacedDigit())
             .padding(.vertical, 4)
@@ -304,6 +343,7 @@ struct PlaylistSection: View {
 }
 
 struct TrackRow: View {
+    @Environment(AppModel.self) private var model
     @Bindable var row: RowReview
 
     var body: some View {
@@ -317,7 +357,7 @@ struct TrackRow: View {
             .frame(minWidth: 160, maxWidth: .infinity, alignment: .leading)
 
             VStack(alignment: .trailing, spacing: 2) {
-                Picker("Match", selection: $row.pick) {
+                Picker("Match", selection: pickBinding) {
                     ForEach(row.options) { t in
                         Text(optionLabel(t)).tag(Optional(t.file))
                     }
@@ -334,16 +374,26 @@ struct TrackRow: View {
                                 "Also in your library at:\n" + row.result.dupes.joined(separator: "\n")
                                     + "\nMake sure the one used is the copy Rekordbox has.")
                     }
-                    Text(
-                        row.picked?.filename
-                            ?? (row.result.status == .missing && !row.touched ? "Not found" : "Skipped")
-                    )
-                    .lineLimit(1).truncationMode(.middle)
-                    .help(row.picked?.file ?? "")
+                    Text(row.picked?.filename ?? (row.state == .missing ? "Not found" : "Skipped"))
+                        .lineLimit(1).truncationMode(.middle)
+                        .help(row.picked?.file ?? "")
                 }
                 .font(.caption).foregroundStyle(.secondary)
             }
             .frame(width: 380)
+
+            // Hidden rather than removed once decided, so the columns stay lined up.
+            Button {
+                withAnimation { model.decide(row, row.picked) }
+            } label: {
+                Image(systemName: row.pick == nil ? "minus.circle" : "checkmark")
+            }
+            .buttonStyle(.borderless)
+            .help(row.pick == nil ? "Leave it out of the export" : "Keep this match")
+            .accessibilityLabel(row.pick == nil ? "Skip" : "Keep match")
+            .opacity(row.needsAttention ? 1 : 0)
+            .disabled(!row.needsAttention)
+            .accessibilityHidden(!row.needsAttention)
 
             Button {
                 openSearch()
@@ -360,18 +410,24 @@ struct TrackRow: View {
     }
 
     @ViewBuilder private var statusIcon: some View {
-        if row.pick == nil {
-            Image(systemName: row.result.status == .missing && !row.touched ? "xmark.circle.fill" : "minus.circle")
-                .foregroundStyle(row.result.status == .missing && !row.touched ? .red : .secondary)
-        } else if row.touched {
-            Image(systemName: "checkmark.circle.fill").foregroundStyle(.tint)
-        } else {
-            switch row.result.status {
-            case .ok: Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-            case .check: Image(systemName: "questionmark.circle.fill").foregroundStyle(.orange)
-            case .missing: Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
-            }
+        switch row.state {
+        case .matched:
+            Image(systemName: "checkmark.circle.fill").foregroundStyle(
+                row.decided ? AnyShapeStyle(.tint) : AnyShapeStyle(.green))
+        case .check: Image(systemName: "questionmark.circle.fill").foregroundStyle(.orange)
+        case .missing: Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
+        case .skipped: Image(systemName: "minus.circle").foregroundStyle(.secondary)
         }
+    }
+
+    /// Choosing from the menu counts as a decision, even when it's the file already picked.
+    private var pickBinding: Binding<String?> {
+        Binding(
+            get: { row.pick },
+            set: { file in
+                let track = file.flatMap { f in row.options.first { $0.file == f } }
+                withAnimation { model.decide(row, track) }
+            })
     }
 
     private func optionLabel(_ t: LibraryTrack) -> String {
@@ -406,8 +462,8 @@ struct LibrarySearch: View {
             } else {
                 List(results) { t in
                     Button {
-                        row.choose(t)
                         row.searching = false
+                        withAnimation { model.decide(row, t) }
                     } label: {
                         VStack(alignment: .leading, spacing: 1) {
                             Text("\(t.artist.isEmpty ? "?" : t.artist) – \(t.title)").lineLimit(1)

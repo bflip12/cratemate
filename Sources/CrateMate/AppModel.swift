@@ -3,6 +3,19 @@
 import AppKit
 import CrateMateCore
 import Observation
+import SwiftUI
+
+/// How a row stands now, counting the user's decisions.
+enum RowState {
+    /// Matched with confidence, or the user chose the file.
+    case matched
+    /// The matcher's pick is probably right, and the user hasn't looked yet.
+    case check
+    /// Not found, and the user hasn't decided yet.
+    case missing
+    /// The user left it out of the export.
+    case skipped
+}
 
 @Observable final class RowReview: Identifiable {
     let id: Int
@@ -12,28 +25,50 @@ import Observation
     var options: [LibraryTrack]
     var scores: [String: Double]
     /// File path of the chosen track; nil means skip.
-    var pick: String? { didSet { if pick != oldValue { touched = true } } }
-    private(set) var touched = false
+    private(set) var pick: String?
+    /// Whether the user has decided on this song: chose a file, skipped it or kept the suggested
+    /// match, in this playlist, another one or an earlier session.
+    private(set) var decided = false
     /// UI state for the library search popover.
     var searching = false
     var searchQuery = ""
 
-    init(id: Int, src: SourceTrack, result: MatchResult) {
+    init(id: Int, src: SourceTrack, result: MatchResult, restored: RestoredPick?) {
         self.id = id
         self.src = src
         self.result = result
         options = result.candidates.map(\.track)
         scores = Dictionary(result.candidates.map { ($0.track.file, $0.score) }, uniquingKeysWith: { a, _ in a })
-        pick = result.status == .missing ? nil : result.best?.track.file
-        touched = false  // the initial pick isn't a user change
+        apply(restored)
     }
 
     var picked: LibraryTrack? { pick.flatMap { p in options.first { $0.file == p } } }
-    var needsAttention: Bool { result.status != .ok }
+    /// Still to look at: the matcher wasn't sure, and the user hasn't decided yet.
+    var needsAttention: Bool { !decided && result.status != .ok }
 
-    func choose(_ t: LibraryTrack) {
-        if !options.contains(t) { options.append(t) }
-        pick = t.file
+    var state: RowState {
+        if decided { return pick == nil ? .skipped : .matched }
+        switch result.status {
+        case .ok: return .matched
+        case .check: return .check
+        case .missing: return .missing
+        }
+    }
+
+    /// Shows a saved pick, or the matcher's own pick if there's none.
+    func apply(_ restored: RestoredPick?) {
+        switch restored {
+        case .use(let track):
+            if !options.contains(track) { options.append(track) }
+            pick = track.file
+            decided = true
+        case .skip:
+            pick = nil
+            decided = true
+        case nil:
+            pick = result.status == .missing ? nil : result.best?.track.file
+            decided = false
+        }
     }
 }
 
@@ -47,7 +82,8 @@ import Observation
         self.rows = rows
     }
 
-    func count(_ s: MatchResult.Status) -> Int { rows.filter { $0.result.status == s }.count }
+    func count(_ s: RowState) -> Int { rows.filter { $0.state == s }.count }
+    var leftToCheck: Int { rows.filter(\.needsAttention).count }
     var exportTracks: [LibraryTrack] { rows.compactMap(\.picked) }
 }
 
@@ -95,6 +131,12 @@ enum ScanState: Equatable {
     var reviews: [String: PlaylistReview] = [:]
     var showAll = false
     var playlistFilter = ""
+
+    /// Picks the user made, by song. Restored into each review as it's built.
+    private(set) var picks = PickStore.load()
+    var confirmingForgetPicks = false
+    /// The main window's undo manager, for undoing decisions in the review list.
+    weak var undoManager: UndoManager?
 
     var exported: [URL] = []
     var errorMessage: String?
@@ -154,7 +196,7 @@ enum ScanState: Equatable {
             }
             index = result.index
             scan = .ready
-            reviews = [:]  // picks were made against the old scan
+            reviews = [:]  // rebuilt against the new scan, with saved picks restored
             matchSelected()
         }
     }
@@ -169,8 +211,73 @@ enum ScanState: Equatable {
                 guard self.index === index else { return }
                 reviews[p.id] = PlaylistReview(
                     playlist: p,
-                    rows: zip(p.tracks, results).enumerated().map { RowReview(id: $0, src: $1.0, result: $1.1) })
+                    rows: zip(p.tracks, results).enumerated().map { i, pair in
+                        RowReview(
+                            id: i, src: pair.0, result: pair.1,
+                            restored: picks.restore(pair.0, result: pair.1, in: index))
+                    })
             }
+        }
+    }
+
+    // MARK: Picks
+
+    /// Records the user's choice for `row` (nil to skip it), remembers it, and applies it to the same
+    /// song in every other loaded playlist.
+    func decide(_ row: RowReview, _ track: LibraryTrack?) {
+        let name = track == nil ? "Skip" : track?.file == row.pick ? "Keep Match" : "Choose File"
+        setPicks([(row.src, SavedPick(file: track?.file, best: row.result.best?.track.file))], undoName: name)
+    }
+
+    /// Keeps the current choice for every row in `review` that's still left to check.
+    func acceptAll(in review: PlaylistReview) {
+        let changes = review.rows.filter(\.needsAttention).map { row in
+            (row.src, SavedPick?.some(SavedPick(file: row.pick, best: row.result.best?.track.file)))
+        }
+        setPicks(changes, undoName: "Accept All")
+    }
+
+    func forgetPicks() {
+        picks.removeAll()
+        savePicks()
+        undoManager?.removeAllActions(withTarget: self)
+        reviews = [:]
+        matchSelected()
+    }
+
+    /// Saves `changes` (nil forgets a song's pick), updates every loaded row of those songs, and
+    /// registers an undo that puts the old picks back.
+    ///
+    /// Rows are found by song rather than kept from before, so undo still works after a rescan
+    /// rebuilds them.
+    private func setPicks(_ changes: [(SourceTrack, SavedPick?)], undoName: String) {
+        let before = changes.map { src, _ in (src, picks[src]) }
+        if let undoManager {
+            undoManager.registerUndo(withTarget: self) { model in
+                MainActor.assumeIsolated {
+                    withAnimation { model.setPicks(before, undoName: undoName) }
+                }
+            }
+            undoManager.setActionName(undoName)
+        }
+        for (src, pick) in changes { picks[src] = pick }
+        savePicks()
+
+        guard let index else { return }
+        let keys = Set(changes.map { PickStore.key(for: $0.0) })
+        for review in reviews.values {
+            for row in review.rows where keys.contains(PickStore.key(for: row.src)) {
+                row.apply(picks.restore(row.src, result: row.result, in: index))
+            }
+        }
+    }
+
+    private func savePicks() {
+        do {
+            try picks.save()
+        } catch {
+            errorMessage =
+                "Couldn't save your picks, so they'll be forgotten when CrateMate quits. \(error.localizedDescription)"
         }
     }
 

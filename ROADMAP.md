@@ -13,7 +13,6 @@ Have an idea or need something on this list sooner? [Open a feature request](htt
 ## Next
 
 - **Notarized builds,** so the app opens with a double-click and without the Open Anyway step, and keeps its Apple Music permission across updates.
-- **Remember picks.** Keep the choices you made in the review list, so exporting the same playlist again doesn't mean fixing the same rows.
 - **Export the not-found list,** as a text or CSV file, to use as a shopping list.
 - **Install with Homebrew** (`brew install --cask cratemate`).
 

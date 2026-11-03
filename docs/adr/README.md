@@ -13,6 +13,7 @@ Each file here records one decision that shapes CrateMate: the situation, what w
 | [0007](0007-ad-hoc-signed-releases.md) | Ship ad-hoc signed DMGs from GitHub Releases | Accepted |
 | [0008](0008-system-accent-colour.md) | Use the system accent colour inside the app | Accepted |
 | [0009](0009-static-website.md) | Build the website as static HTML with no build step | Accepted |
+| [0010](0010-remember-picks-by-song.md) | Remember picks by song, not by playlist | Accepted |
 
 ## Writing a new one
 

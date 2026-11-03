@@ -27,6 +27,7 @@ CrateMate doesn't use file paths from Apple Music. It matches each song by **art
 - **Matches on metadata.** It handles accents and non-Latin scripts, `&` vs "and", "feat." in the title or the artist, typos, and untagged files named like `01 - Artist - Title.wav`.
 - **Tells versions apart.** Track length separates an Extended Mix from an Original Mix or a Radio Edit with the same title.
 - **Shows its work.** Every song is marked matched, worth a check, or not found. You can pick another candidate, search your DJ folder, or skip the song before exporting.
+- **Remembers your picks.** A song you fix or skip stays fixed in every playlist, and the next time you open CrateMate.
 - **Flags duplicates.** If the same recording is in your DJ folder twice, CrateMate tells you, so you can make sure the playlist points at the copy Rekordbox knows.
 - **Never touches your files.** Your DJ folder is only ever read. Nothing is moved, renamed or retagged, since Rekordbox tracks files by path.
 - **Fast after the first scan.** Tags are cached, and only new or changed files are read again.
@@ -75,7 +76,7 @@ To update later, run `git pull`, then run `scripts/build-app.sh --install` again
    | ❓ | Probably right, but worth a look, e.g. a close call between an Original and an Extended Mix |
    | ❌ | Not found in your DJ folder |
 
-   To fix a row, choose another file from its menu, use 🔍 to search your DJ folder, or choose **Skip** to leave it out.
+   To fix a row, choose another file from its menu, use 🔍 to search your DJ folder, or choose **Skip** to leave it out. If the suggested file is right, click ✓ to keep it, or click **Accept All** to keep the rest of the playlist as it is. Each row you decide on leaves the list, and CrateMate remembers your choice for that song in every playlist. Changed your mind? Choose Edit › Undo (⌘Z). To start over, choose CrateMate › Settings… › **Forget All Picks…**.
 4. **Click Export.** Each playlist is saved as its own `.m3u8` in `~/Music/CrateMate`. You can change the folder at the bottom of the sidebar.
 5. **Import into Rekordbox.** Choose **File › Import › Import Playlist**, or drag the `.m3u8` onto **Playlists**.
 
@@ -103,7 +104,7 @@ A score of 85% or more is a match. A score of 70% or more is picked but flagged 
 CrateMate works entirely on your Mac. It makes no network requests and collects no analytics.
 
 - **Reads:** your Apple Music library's metadata, and the tags of the audio files in the DJ folder you choose.
-- **Writes:** the `.m3u8` files you export, and a tag cache in `~/Library/Application Support/CrateMate/`.
+- **Writes:** the `.m3u8` files you export, plus a tag cache and your saved picks in `~/Library/Application Support/CrateMate/`.
 
 ## Troubleshooting
 

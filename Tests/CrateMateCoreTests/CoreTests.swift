@@ -91,6 +91,57 @@ private func lt(_ file: String, _ artist: String, _ title: String, _ dur: Double
     #expect(p.tracks[1].duration == 361)
 }
 
+@Test func savedPickFollowsTheSongAcrossPlaylists() {
+    var store = PickStore()
+    store[SourceTrack(title: "Organic Liquid Tester (Original Mix)", artist: "Cryme")] = SavedPick(
+        file: "/lib/olt.mp3", best: nil)
+    #expect(store[SourceTrack(title: "Organic Liquid Tester (Original Mix)", artist: "CRYME", duration: 339)] != nil)
+    #expect(store[SourceTrack(title: "Organic Liquid Tester (Extended Mix)", artist: "Cryme")] == nil)
+}
+
+@Test func savedFileAppliesWhileItIsInTheDJFolder() {
+    let src = SourceTrack(title: "Track A", artist: "Mr Fingers", duration: 390)
+    var store = PickStore()
+    store[src] = SavedPick(file: "/lib/a2.mp3", best: "/lib/a1.mp3")
+
+    let both = LibraryIndex(tracks: [
+        lt("a1.mp3", "Mr Fingers", "Track A (Original Mix)", 390),
+        lt("a2.mp3", "Mr Fingers", "Track A (Extended Mix)", 465),
+    ])
+    #expect(store.restore(src, result: both.match(src), in: both) == .use(both.track(at: "/lib/a2.mp3")!))
+
+    let moved = LibraryIndex(tracks: [lt("a1.mp3", "Mr Fingers", "Track A (Original Mix)", 390)])
+    #expect(store.restore(src, result: moved.match(src), in: moved) == nil)
+}
+
+@Test func skipHoldsUntilABetterFileTurnsUp() {
+    let src = SourceTrack(title: "Strings of Life", artist: "Rhythim Is Rhythim", duration: 480)
+    let before = LibraryIndex(tracks: [lt("s.mp3", "Someone Else", "Strings", 200)])
+    var store = PickStore()
+    store[src] = SavedPick(file: nil, best: before.match(src).best?.track.file)
+    #expect(store.restore(src, result: before.match(src), in: before) == .skip)
+
+    let after = LibraryIndex(tracks: [
+        lt("s.mp3", "Someone Else", "Strings", 200),
+        lt("sol.mp3", "Rhythim Is Rhythim", "Strings of Life", 480),
+    ])
+    #expect(store.restore(src, result: after.match(src), in: after) == nil)
+}
+
+@Test func picksSurviveARelaunch() throws {
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent("cratemate-test-picks/picks.json")
+    try? FileManager.default.removeItem(at: url)
+    #expect(PickStore.load(from: url).count == 0)
+
+    var store = PickStore()
+    store[SourceTrack(title: "Rain", artist: "Kerri Chandler")] = SavedPick(file: "/lib/rain.wav", best: nil)
+    store[SourceTrack(title: "Not In Library", artist: "Nobody")] = SavedPick(file: nil, best: nil)
+    try store.save(to: url)
+
+    let loaded = PickStore.load(from: url)
+    #expect(loaded.picks == store.picks)
+}
+
 /// End to end against the fake library from scripts/make-test-library.sh.
 ///
 /// Run with CRATEMATE_TEST_LIBRARY=<dir passed to the script>.

@@ -159,10 +159,12 @@ public final class LibraryIndex: @unchecked Sendable {
     private let prepared: [Prepared]
     private let byToken: [String: [Int]]
     private let searchHay: [[String]]
+    private let byFile: [String: LibraryTrack]
 
     /// Builds the index. This does all the per-file normalising up front, so matching is fast.
     public init(tracks: [LibraryTrack]) {
         self.tracks = tracks.sorted { $0.file < $1.file }
+        byFile = Dictionary(self.tracks.map { ($0.file, $0) }, uniquingKeysWith: { a, _ in a })
         prepared = self.tracks.map { Prepared(title: $0.title, artist: $0.artist, duration: $0.duration) }
         var idx: [String: [Int]] = [:]
         for (i, p) in prepared.enumerated() { for t in p.coreTokens { idx[t, default: []].append(i) } }
@@ -172,6 +174,9 @@ public final class LibraryIndex: @unchecked Sendable {
 
     /// The number of files in the library.
     public var count: Int { tracks.count }
+
+    /// The file at `path`, if it's in the library.
+    public func track(at path: String) -> LibraryTrack? { byFile[path] }
 
     /// Finds the library file that best matches `src`, plus other plausible files and duplicate copies.
     public func match(_ src: SourceTrack) -> MatchResult {

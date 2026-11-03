@@ -125,7 +125,7 @@ The duration is in whole seconds, or `-1` if unknown. `writeM3U` names the file 
 | Type | Role |
 |---|---|
 | `AppModel` | The single `@MainActor @Observable` state object: settings, playlists, scan state, the `LibraryIndex`, reviews per playlist, and export. |
-| `PlaylistReview` | The match results for one playlist. Built the first time the playlist is selected after a scan. |
+| `PlaylistReview` | The match results for one playlist. Built for every playlist after each scan, selected ones first, so the sidebar can show how many songs each will export. |
 | `RowReview` | One song. `pick` is the chosen file path, or `nil` to skip it. `decided` records whether the user has chosen a file, skipped the song or kept the suggested match, here, in another playlist or in an earlier session. `state` combines the two with the match status, and drives the row's icon and the header counts. |
 | `ContentView` and others | Sidebar (playlists, with Apple Music folders as collapsible rows, plus the DJ and output folder footer), detail (scan progress or the review list), toolbar (filter and Export), and the Settings window. |
 

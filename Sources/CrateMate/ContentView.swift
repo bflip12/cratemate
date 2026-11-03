@@ -118,6 +118,11 @@ struct Sidebar: View {
                                 rows(group.playlists)
                             } label: {
                                 Label(folder, systemImage: "folder")
+                                    .contextMenu {
+                                        Button("Select All Playlists in Folder") {
+                                            model.selection = Set(group.playlists.map(\.id))
+                                        }
+                                    }
                             }
                         } else {
                             rows(group.playlists)
@@ -133,9 +138,21 @@ struct Sidebar: View {
     private func rows(_ playlists: [Playlist]) -> some View {
         ForEach(playlists) { p in
             Label(p.name, systemImage: p.isSmart ? "gearshape" : "music.note.list")
-                .badge(p.tracks.count)
+                .badge(badge(p))
+                .help(found(p))
                 .tag(p.id)
         }
+    }
+
+    /// Songs in the export out of all songs, once the playlist is matched; until then, the song count.
+    private func badge(_ p: Playlist) -> Text {
+        guard let r = model.reviews[p.id] else { return Text("\(p.tracks.count)") }
+        return Text("\(r.exportTracks.count)/\(p.tracks.count)")
+    }
+
+    private func found(_ p: Playlist) -> String {
+        guard let r = model.reviews[p.id] else { return "" }
+        return "\(r.exportTracks.count) of \(p.tracks.count) songs in export"
     }
 
     /// Folders open while filtering, so every match is visible.
@@ -219,6 +236,7 @@ struct SidebarFooter: View {
                         Image(systemName: "arrow.clockwise")
                     }
                     .help("Re-read the tags of every file")
+                    .accessibilityLabel("Rescan DJ Folder")
                     .disabled(model.scan != .ready)
                 }
                 Button("Change") { model.chooseLibrary() }
@@ -227,7 +245,7 @@ struct SidebarFooter: View {
                 Button("Change") { model.chooseOutput() }
             }
         }
-        .buttonStyle(.borderless)
+        .buttonStyle(.bordered)
         .controlSize(.small)
         .padding(12)
         .background(.bar)

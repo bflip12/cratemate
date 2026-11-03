@@ -20,6 +20,9 @@ enum RowState {
     case skipped
 }
 
+/// Which popover a row has open behind its file cell.
+enum RowPanel { case choose, search }
+
 @Observable final class RowReview: Identifiable {
     let id: Int
     let src: SourceTrack
@@ -32,9 +35,11 @@ enum RowState {
     /// Whether the user has decided on this song: chose a file, skipped it or kept the suggested
     /// match, in this playlist, another one or an earlier session.
     private(set) var decided = false
-    /// UI state for the library search popover.
-    var searching = false
+    /// UI state for the popover behind the row's file cell.
+    var panel: RowPanel?
     var searchQuery = ""
+    /// The popover item under the pointer, drawn highlighted like a menu item.
+    var hovered: String?
 
     init(id: Int, src: SourceTrack, result: MatchResult, restored: RestoredPick?) {
         self.id = id
@@ -79,6 +84,15 @@ enum RowState {
         }
         guard let first = parts.first else { return "Close, but not a confident match" }
         return (first.prefix(1).uppercased() + first.dropFirst() + parts.dropFirst().map { ", \($0)" }.joined())
+    }
+
+    /// Opens the search, prefilled with artist and title minus "(… Mix)" noise, so it's broad enough.
+    func openSearch() {
+        if searchQuery.isEmpty {
+            let title = src.title.components(separatedBy: CharacterSet(charactersIn: "([")).first ?? src.title
+            searchQuery = "\(src.artist) \(title)".trimmingCharacters(in: .whitespaces)
+        }
+        panel = .search
     }
 
     /// Shows a saved pick, or the matcher's own pick if there's none.

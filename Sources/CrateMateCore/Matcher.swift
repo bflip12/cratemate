@@ -152,6 +152,43 @@ func score(_ p: Prepared, _ l: Prepared) -> Double {
     return max(0, min(1, s))
 }
 
+/// A way a library file differs from the song it was matched to, used to explain a match that's
+/// worth a check.
+public enum Difference: Equatable, Sendable {
+    /// The file is this many seconds longer (positive) or shorter (negative). Only past 3 s.
+    case length(Double)
+    /// The remix or edit words differ, e.g. "Extended Mix" against none.
+    case version
+    /// The titles differ, not counting the version.
+    case title
+    /// Both have an artist, with no name in common.
+    case artist
+    /// The song has no artist, so only the title and length could match.
+    case noSongArtist
+    /// The file has no artist tag, and none could be read from its filename.
+    case noFileArtist
+}
+
+/// How `file` differs from `src`, most telling first: version, title, artist, then length.
+public func differences(_ src: SourceTrack, _ file: LibraryTrack) -> [Difference] {
+    let s = Prepared(title: src.title, artist: src.artist, duration: src.duration)
+    let f = Prepared(title: file.title, artist: file.artist, duration: file.duration)
+    var out: [Difference] = []
+    if s.vtokens != f.vtokens { out.append(.version) }
+    if s.core != f.core { out.append(.title) }
+    if s.artists.isEmpty {
+        out.append(.noSongArtist)
+    } else if f.artists.isEmpty {
+        out.append(.noFileArtist)
+    } else if s.artists.isDisjoint(with: f.artists) {
+        out.append(.artist)
+    }
+    if let sd = s.duration, let fd = f.duration, sd > 0, fd > 0, abs(fd - sd) > 3 {
+        out.append(.length(fd - sd))
+    }
+    return out
+}
+
 /// The scanned library, prepared for matching and search.
 public final class LibraryIndex: @unchecked Sendable {
     /// Every file in the library, sorted by path.

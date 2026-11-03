@@ -76,8 +76,8 @@ To update later, run `git pull`, then run `scripts/build-app.sh --install` again
    | ❓ | Probably right, but worth a look, e.g. a close call between an Original and an Extended Mix |
    | ❌ | Not found in your DJ folder |
 
-   To fix a row, choose another file from its menu, use 🔍 to search your DJ folder, or choose **Skip** to leave it out. If the suggested file is right, click ✓ to keep it, or click **Accept All** to keep the rest of the playlist as it is. Each row you decide on leaves the list, and CrateMate remembers your choice for that song in every playlist. Changed your mind? Choose Edit › Undo (⌘Z). To start over, choose CrateMate › Settings… › **Forget All Picks…**.
-4. **Click Export.** Each playlist is saved as its own `.m3u8` in `~/Music/CrateMate`. You can change the folder at the bottom of the sidebar.
+   Each row that needs a look says why, for example "Different version, 0:44 longer". To fix a row, choose another file from its menu, use 🔍 to search your DJ folder, or choose **Skip** to leave it out. If the suggested file is right, click ✓ to keep it, or click **Accept All** to keep the rest of the playlist as it is. Each row you decide on leaves the list, and CrateMate remembers your choice for that song in every playlist. Changed your mind? Choose Edit › Undo (⌘Z). To start over, choose CrateMate › Settings… › **Forget All Picks…**.
+4. **Click Export.** Playlists with nothing to export are left out. Each playlist is saved as its own `.m3u8` in `~/Music/CrateMate`. You can change the folder at the bottom of the sidebar.
 5. **Import into Rekordbox.** Choose **File › Import › Import Playlist**, or drag the `.m3u8` onto **Playlists**.
 
 ### Without Apple Music access

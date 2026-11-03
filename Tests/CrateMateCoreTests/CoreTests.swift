@@ -91,6 +91,24 @@ private func lt(_ file: String, _ artist: String, _ title: String, _ dur: Double
     #expect(p.tracks[1].duration == 361)
 }
 
+@Test func differencesExplainAMatch() {
+    let song = SourceTrack(title: "Can You Feel It", artist: "Mr. Fingers", duration: 417)
+    #expect(differences(song, lt("a.mp3", "Mr. Fingers", "Can You Feel It", 418)).isEmpty)
+    #expect(
+        differences(song, lt("b.mp3", "Mr. Fingers", "Can You Feel It (Instrumental)", 461))
+            == [.version, .length(44)])
+    #expect(differences(song, lt("c.mp3", "Larry Heard", "Can You Feel It", 417)) == [.artist])
+    #expect(
+        differences(SourceTrack(title: "Rain", artist: "", duration: 361), lt("d.wav", "Kerri Chandler", "Rain", 361))
+            == [.noSongArtist])
+    #expect(differences(song, lt("e.mp3", "", "Can You Feel It", 300)) == [.noFileArtist, .length(-117)])
+    // A featured artist in common is enough
+    #expect(
+        differences(
+            SourceTrack(title: "Track (feat. Bob)", artist: "Alice"), lt("f.mp3", "Bob", "Track (feat. Bob)", 0)
+        ).isEmpty)
+}
+
 @Test func savedPickFollowsTheSongAcrossPlaylists() {
     var store = PickStore()
     store[SourceTrack(title: "Organic Liquid Tester (Original Mix)", artist: "Cryme")] = SavedPick(

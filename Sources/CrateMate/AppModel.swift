@@ -5,6 +5,9 @@ import CrateMateCore
 import Observation
 import SwiftUI
 
+/// A 0–1 match score as a whole percentage, e.g. "78%".
+func percent(_ score: Double) -> String { "\(Int((score * 100).rounded()))%" }
+
 /// How a row stands now, counting the user's decisions.
 enum RowState {
     /// Matched with confidence, or the user chose the file.
@@ -55,6 +58,29 @@ enum RowState {
         }
     }
 
+    /// Why the matcher wasn't sure, for a row that still needs attention.
+    var reason: String? {
+        guard needsAttention, let best = result.best else { return nil }
+        if let other = result.runnerUp {
+            return "Another file scores \(percent(other.score)): \(other.track.filename)"
+        }
+        if result.status == .missing {
+            return "The closest file scores \(percent(best.score)): \(best.track.filename)"
+        }
+        let parts = differences(src, best.track).map { d -> String in
+            switch d {
+            case .version: return "different version"
+            case .title: return "different title"
+            case .artist: return "different artist (\(best.track.artist))"
+            case .noSongArtist: return "no artist in Apple Music"
+            case .noFileArtist: return "no artist on the file"
+            case .length(let secs): return "\(fmtDur(abs(secs))) \(secs > 0 ? "longer" : "shorter")"
+            }
+        }
+        guard let first = parts.first else { return "Close, but not a confident match" }
+        return (first.prefix(1).uppercased() + first.dropFirst() + parts.dropFirst().map { ", \($0)" }.joined())
+    }
+
     /// Shows a saved pick, or the matcher's own pick if there's none.
     func apply(_ restored: RestoredPick?) {
         switch restored {
@@ -83,6 +109,18 @@ enum RowState {
     }
 
     func count(_ s: RowState) -> Int { rows.filter { $0.state == s }.count }
+    /// Nothing in the playlist was found in the DJ folder.
+    var noneFound: Bool { rows.allSatisfy { $0.result.status == .missing } }
+    /// Rows whose file is already used by an earlier row, so it would be in the export twice.
+    var repeatedRows: Set<Int> {
+        var seen = Set<String>()
+        var out = Set<Int>()
+        for row in rows {
+            guard let file = row.pick else { continue }
+            if !seen.insert(file).inserted { out.insert(row.id) }
+        }
+        return out
+    }
     var leftToCheck: Int { rows.filter(\.needsAttention).count }
     var exportTracks: [LibraryTrack] { rows.compactMap(\.picked) }
 }
@@ -139,6 +177,8 @@ enum ScanState: Equatable {
     weak var undoManager: UndoManager?
 
     var exported: [URL] = []
+    /// Selected playlists left out of the last export because they had no songs to export.
+    var leftOut: [String] = []
     var errorMessage: String?
 
     var selectedPlaylists: [Playlist] { playlists.filter { selection.contains($0.id) } }
@@ -303,12 +343,15 @@ enum ScanState: Equatable {
 
     // MARK: Export
 
-    var canExport: Bool { selectedPlaylists.contains { reviews[$0.id] != nil } }
+    /// Selected playlists with at least one song to export.
+    var exportable: [Playlist] { selectedPlaylists.filter { reviews[$0.id]?.exportTracks.isEmpty == false } }
+    var canExport: Bool { !exportable.isEmpty }
 
     func export() {
         let dir = URL(fileURLWithPath: outputPath, isDirectory: true)
         var written: [URL] = []
-        for p in selectedPlaylists {
+        leftOut = selectedPlaylists.filter { reviews[$0.id]?.exportTracks.isEmpty == true }.map(\.name)
+        for p in exportable {
             guard let r = reviews[p.id] else { continue }
             do {
                 written.append(try writeM3U(name: p.name, tracks: r.exportTracks, to: dir))
@@ -318,6 +361,15 @@ enum ScanState: Equatable {
             }
         }
         exported = written
+    }
+
+    /// Copies "Artist – Title" for each song in `review` that wasn't found, one per line.
+    func copyNotFound(in review: PlaylistReview) {
+        let lines = review.rows.filter { $0.result.status == .missing }.map { row in
+            row.src.artist.isEmpty ? row.src.title : "\(row.src.artist) – \(row.src.title)"
+        }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(lines.joined(separator: "\n"), forType: .string)
     }
 
     func revealExported() {

@@ -1,4 +1,4 @@
-// App entry point: a single window, plus File › Open Playlist Export… (⌘O).
+// App entry point: a single window, File › Open Playlist Export… (⌘O) and a Settings window (⌘,).
 
 import SwiftUI
 
@@ -21,6 +21,10 @@ struct CrateMateApp: App {
                 Button("Open Playlist Export…") { model.openExportFile() }
                     .keyboardShortcut("o")
             }
+        }
+
+        Settings {
+            SettingsView().environment(model)
         }
     }
 }

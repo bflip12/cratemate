@@ -75,6 +75,15 @@ enum ScanState: Equatable {
     {
         didSet { UserDefaults.standard.set(outputPath, forKey: "output") }
     }
+    /// How Apple Music folders start out in the sidebar. Changing it resets every folder to match.
+    var expandFolders: Bool = UserDefaults.standard.bool(forKey: "expandFolders") {
+        didSet {
+            UserDefaults.standard.set(expandFolders, forKey: "expandFolders")
+            folderExpanded = [:]
+        }
+    }
+    /// Folders opened or closed by hand this session; the rest follow `expandFolders`.
+    var folderExpanded: [String: Bool] = [:]
 
     var playlists: [Playlist] = []
     var playlistsError: String?

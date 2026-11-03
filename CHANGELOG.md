@@ -14,6 +14,7 @@ The first public release will be 0.1.0.
 - Duplicate detection for the same recording stored more than once in the DJ folder.
 - `.m3u8` export with absolute paths, ready for Rekordbox's Import Playlist.
 - A fallback for Apple Music's Unicode Text playlist export (⌘O).
+- Collapsible playlist folders in the sidebar, collapsed by default, with a Settings window (⌘,) to start them expanded instead.
 - A tag cache, so only new or changed files are read after the first scan.
 - A download: a universal app for Apple silicon and Intel Macs in a drag-to-Applications DMG, published to GitHub Releases by `.github/workflows/release.yml` when a version tag is pushed.
 - The CrateMate name, app icon, logo and wordmark. The icon is drawn by `scripts/make-icon.sh`; the rest is in `docs/brand`.

@@ -66,7 +66,7 @@ To update later, run `git pull`, then run `scripts/build-app.sh --install` again
 ## Usage
 
 1. **Choose your DJ folder.** Use the same folder Rekordbox uses. The first scan reads every file's tags, and later scans read only what changed.
-2. **Select playlists** in the sidebar. ⌘-click selects several.
+2. **Select playlists** in the sidebar. ⌘-click selects several. Apple Music folders start collapsed; click a folder to open it, or choose CrateMate › Settings… to have them start expanded.
 3. **Review the matches.** By default, **Needs attention** shows only the songs that need a look:
 
    | Mark | Meaning |

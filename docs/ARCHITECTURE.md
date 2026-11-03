@@ -115,13 +115,13 @@ The duration is in whole seconds, or `-1` if unknown. `writeM3U` names the file 
 | `AppModel` | The single `@MainActor @Observable` state object: settings, playlists, scan state, the `LibraryIndex`, reviews per playlist, and export. |
 | `PlaylistReview` | The match results for one playlist. Built the first time the playlist is selected after a scan. |
 | `RowReview` | One song. `pick` is the chosen file path, or `nil` to skip it. `touched` records whether the user changed it. |
-| `ContentView` and others | Sidebar (playlists grouped by folder, plus the DJ and output folder footer), detail (scan progress or the review list), toolbar (filter and Export). |
+| `ContentView` and others | Sidebar (playlists, with Apple Music folders as collapsible rows, plus the DJ and output folder footer), detail (scan progress or the review list), toolbar (filter and Export), and the Settings window. |
 
 How the app behaves:
 
 - Apple Music reading, scanning and matching run off the main actor with `Task.detached` or `async` core functions. Results are assigned back on the main actor.
 - A rescan clears `reviews`, because the picks were made against the old index.
-- Settings live in `UserDefaults`: `library` (the DJ folder) and `output` (the export folder, `~/Music/CrateMate` by default). If either is unset, `AppModel` falls back to the value saved under the app's old bundle identifier, `com.bobbyf.am2rb`, so settings carry over from before the rename.
+- Settings live in `UserDefaults`: `library` (the DJ folder) and `output` (the export folder, `~/Music/CrateMate` by default). If either is unset, `AppModel` falls back to the value saved under the app's old bundle identifier, `com.bobbyf.am2rb`, so settings carry over from before the rename. `expandFolders` sets whether Apple Music folders start expanded in the sidebar (collapsed by default). Folders are outline rows (`DisclosureGroup`) under one Playlists section, and they all open while the playlist filter has text.
 - **UI state lives on the model objects**, not in `@State`. Examples are `RowReview.searching` and `AppModel.playlistFilter`. See [CODE_STYLE.md](CODE_STYLE.md#swiftui) for why.
 
 ## Building the app bundle

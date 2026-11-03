@@ -80,12 +80,20 @@ struct Sidebar: View {
                     .fixedSize(horizontal: false, vertical: true)
                 Button("Open Playlist Export…") { model.openExportFile() }
             }
-            ForEach(groups, id: \.name) { group in
-                Section(group.name) {
-                    ForEach(group.playlists) { p in
-                        Label(p.name, systemImage: p.isSmart ? "gearshape" : "music.note.list")
-                            .badge(p.tracks.count)
-                            .tag(p.id)
+            if !groups.isEmpty {
+                // Folders are outline rows, like in Apple Music, not collapsible sections: a section
+                // header's hover chevron jumps around when it's toggled.
+                Section("Playlists") {
+                    ForEach(groups, id: \.folder) { group in
+                        if let folder = group.folder {
+                            DisclosureGroup(isExpanded: expanded(folder)) {
+                                rows(group.playlists)
+                            } label: {
+                                Label(folder, systemImage: "folder")
+                            }
+                        } else {
+                            rows(group.playlists)
+                        }
                     }
                 }
             }
@@ -94,20 +102,58 @@ struct Sidebar: View {
         .safeAreaInset(edge: .bottom, spacing: 0) { SidebarFooter() }
     }
 
-    private var groups: [(name: String, playlists: [Playlist])] {
+    private func rows(_ playlists: [Playlist]) -> some View {
+        ForEach(playlists) { p in
+            Label(p.name, systemImage: p.isSmart ? "gearshape" : "music.note.list")
+                .badge(p.tracks.count)
+                .tag(p.id)
+        }
+    }
+
+    /// Folders open while filtering, so every match is visible.
+    private func expanded(_ folder: String) -> Binding<Bool> {
+        Binding(
+            get: { !model.playlistFilter.isEmpty || (model.folderExpanded[folder] ?? model.expandFolders) },
+            // Without an explicit animation the rows appear at once; only collapsing animates.
+            set: { open in withAnimation { model.folderExpanded[folder] = open } })
+    }
+
+    /// Playlists grouped by folder in Apple Music's order; `folder` is nil for those not in one.
+    private var groups: [(folder: String?, playlists: [Playlist])] {
         let filter = model.playlistFilter
         let shown =
             filter.isEmpty
             ? model.playlists
             : model.playlists.filter { $0.name.localizedCaseInsensitiveContains(filter) }
-        var order: [String] = []
-        var byName: [String: [Playlist]] = [:]
+        var order: [String?] = []
+        var byFolder: [String?: [Playlist]] = [:]
         for p in shown {
-            let key = p.folder ?? "Playlists"
-            if byName[key] == nil { order.append(key) }
-            byName[key, default: []].append(p)
+            if byFolder[p.folder] == nil { order.append(p.folder) }
+            byFolder[p.folder, default: []].append(p)
         }
-        return order.map { ($0, byName[$0]!) }
+        return order.map { ($0, byFolder[$0]!) }
+    }
+}
+
+// MARK: - Settings
+
+struct SettingsView: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        @Bindable var model = model
+        Form {
+            Picker("Playlist folders:", selection: $model.expandFolders) {
+                Text("Collapsed").tag(false)
+                Text("Expanded").tag(true)
+            }
+            .pickerStyle(.radioGroup)
+            Text("How Apple Music folders appear in the sidebar when CrateMate opens.")
+                .font(.callout).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(20)
+        .frame(width: 420)
     }
 }
 

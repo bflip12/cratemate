@@ -67,7 +67,7 @@ To update later, run `git pull`, then run `scripts/build-app.sh --install` again
 ## Usage
 
 1. **Choose your DJ folder.** Use the same folder Rekordbox uses. The first scan reads every file's tags, and later scans read only what changed.
-2. **Select playlists** in the sidebar. ⌘-click selects several. Apple Music folders start collapsed; click a folder to open it, or choose CrateMate › Settings… to have them start expanded.
+2. **Select playlists** in the sidebar. Each one shows how many of its songs were found, e.g. 183/185. ⌘-click selects several, or Control-click a folder and choose **Select All Playlists in Folder**. Apple Music folders start collapsed; click a folder to open it, or choose CrateMate › Settings… to have them start expanded.
 3. **Review the matches.** By default, **Needs attention** shows only the songs that need a look:
 
    | Mark | Meaning |
@@ -123,7 +123,7 @@ You can always fall back to a Unicode Text export (⌘O); see [Without Apple Mus
 <details>
 <summary><b>Rekordbox imports the playlist but adds new tracks instead of linking existing ones</b></summary>
 
-Rekordbox links an imported entry only if the path is exactly that of a file already in its collection. Make sure the DJ folder in CrateMate is the folder your Rekordbox collection points at. If a row shows the duplicate icon, choose the copy Rekordbox has.
+Rekordbox links an imported entry only if the path is exactly that of a file already in its collection. Make sure the DJ folder in CrateMate is the folder your Rekordbox collection points at. If a row shows the duplicate icon, choose the copy Rekordbox has. Click the icon to see every copy in Finder, or Control-click a row and choose Show in Finder. Before you delete a copy, check which one Rekordbox uses: deleting that one loses its cue points and beat grid.
 </details>
 
 <details>

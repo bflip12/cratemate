@@ -162,7 +162,7 @@ enum ScanState: Equatable {
     var playlists: [Playlist] = []
     var playlistsError: String?
     var playlistsLoading = false
-    var selection: Set<String> = [] { didSet { matchSelected() } }
+    var selection: Set<String> = [] { didSet { matchPlaylists() } }
 
     var index: LibraryIndex?
     var scan: ScanState = .idle
@@ -199,6 +199,7 @@ enum ScanState: Equatable {
             do {
                 playlists = try await Task.detached { try loadAppleMusicPlaylists() }.value
                 playlistsError = nil
+                matchPlaylists()
             } catch {
                 playlistsError =
                     "Couldn't read your Apple Music library. Allow CrateMate in System Settings › Privacy & Security › Media & Apple Music, or open a playlist exported as Unicode Text."
@@ -237,18 +238,28 @@ enum ScanState: Equatable {
             index = result.index
             scan = .ready
             reviews = [:]  // rebuilt against the new scan, with saved picks restored
-            matchSelected()
+            matching = []
+            matchPlaylists()
         }
     }
 
     // MARK: Matching
 
-    func matchSelected() {
+    /// Playlists being matched right now, so a playlist isn't matched twice at once.
+    private var matching: Set<String> = []
+
+    /// Matches every playlist that hasn't been matched against this scan yet, selected ones
+    /// first. Every playlist is matched, not just the selected ones, so the sidebar can show how
+    /// much of each was found.
+    func matchPlaylists() {
         guard let index else { return }
-        for p in selectedPlaylists where reviews[p.id] == nil {
+        let todo = selectedPlaylists + playlists.filter { !selection.contains($0.id) }
+        for p in todo where reviews[p.id] == nil && !matching.contains(p.id) {
+            matching.insert(p.id)
             Task {
                 let results = await Task.detached { p.tracks.map { index.match($0) } }.value
                 guard self.index === index else { return }
+                matching.remove(p.id)
                 reviews[p.id] = PlaylistReview(
                     playlist: p,
                     rows: zip(p.tracks, results).enumerated().map { i, pair in
@@ -282,7 +293,8 @@ enum ScanState: Equatable {
         savePicks()
         undoManager?.removeAllActions(withTarget: self)
         reviews = [:]
-        matchSelected()
+        matching = []
+        matchPlaylists()
     }
 
     /// Saves `changes` (nil forgets a song's pick), updates every loaded row of those songs, and
@@ -333,6 +345,7 @@ enum ScanState: Equatable {
             do {
                 let p = try parseExport(url)
                 playlists.removeAll { $0.id == p.id }
+                reviews[p.id] = nil  // the file may have changed since it was last opened
                 playlists.insert(p, at: 0)
                 selection.insert(p.id)
             } catch {
@@ -374,6 +387,11 @@ enum ScanState: Equatable {
 
     func revealExported() {
         NSWorkspace.shared.activateFileViewerSelecting(exported)
+    }
+
+    /// Selects the files in Finder. Only reveals them: CrateMate never changes the DJ folder.
+    func reveal(_ files: [String]) {
+        NSWorkspace.shared.activateFileViewerSelecting(files.map { URL(fileURLWithPath: $0) })
     }
 
     private func pickFolder(message: String) -> URL? {

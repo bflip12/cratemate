@@ -118,6 +118,11 @@ struct Sidebar: View {
                                 rows(group.playlists)
                             } label: {
                                 Label(folder, systemImage: "folder")
+                                    .contextMenu {
+                                        Button("Select All Playlists in Folder") {
+                                            model.selection = Set(group.playlists.map(\.id))
+                                        }
+                                    }
                             }
                         } else {
                             rows(group.playlists)
@@ -133,9 +138,21 @@ struct Sidebar: View {
     private func rows(_ playlists: [Playlist]) -> some View {
         ForEach(playlists) { p in
             Label(p.name, systemImage: p.isSmart ? "gearshape" : "music.note.list")
-                .badge(p.tracks.count)
+                .badge(badge(p))
+                .help(found(p))
                 .tag(p.id)
         }
+    }
+
+    /// Songs in the export out of all songs, once the playlist is matched; until then, the song count.
+    private func badge(_ p: Playlist) -> Text {
+        guard let r = model.reviews[p.id] else { return Text("\(p.tracks.count)") }
+        return Text("\(r.exportTracks.count)/\(p.tracks.count)")
+    }
+
+    private func found(_ p: Playlist) -> String {
+        guard let r = model.reviews[p.id] else { return "" }
+        return "\(r.exportTracks.count) of \(p.tracks.count) songs in export"
     }
 
     /// Folders open while filtering, so every match is visible.
@@ -219,6 +236,7 @@ struct SidebarFooter: View {
                         Image(systemName: "arrow.clockwise")
                     }
                     .help("Re-read the tags of every file")
+                    .accessibilityLabel("Rescan DJ Folder")
                     .disabled(model.scan != .ready)
                 }
                 Button("Change") { model.chooseLibrary() }
@@ -227,7 +245,7 @@ struct SidebarFooter: View {
                 Button("Change") { model.chooseOutput() }
             }
         }
-        .buttonStyle(.borderless)
+        .buttonStyle(.bordered)
         .controlSize(.small)
         .padding(12)
         .background(.bar)
@@ -444,11 +462,18 @@ struct TrackRow: View {
                             .help(
                                 "An earlier song in this playlist uses the same file, so it'll be in the export twice.")
                     }
-                    if row.pick == row.result.best?.track.file, !row.result.dupes.isEmpty {
-                        Image(systemName: "doc.on.doc")
-                            .help(
-                                "Also in your library at:\n" + row.result.dupes.joined(separator: "\n")
-                                    + "\nMake sure the one used is the copy Rekordbox has.")
+                    if !copies.isEmpty {
+                        Button {
+                            model.reveal([row.pick!] + copies)
+                        } label: {
+                            Image(systemName: "doc.on.doc")
+                        }
+                        .buttonStyle(.borderless)
+                        .help(
+                            "Also in your DJ folder at:\n" + copies.joined(separator: "\n")
+                                + "\nClick to show every copy in Finder. Check which one Rekordbox uses before you delete any."
+                        )
+                        .accessibilityLabel("Show every copy in Finder")
                     }
                     Text(row.picked?.filename ?? (row.state == .missing ? "Not found" : "Skipped"))
                         .lineLimit(1).truncationMode(.middle)
@@ -483,6 +508,20 @@ struct TrackRow: View {
             }
         }
         .padding(.vertical, 3)
+        .contextMenu {
+            if let file = row.picked?.file {
+                Button("Show in Finder") { model.reveal([file]) }
+                if !copies.isEmpty {
+                    Button("Show Every Copy in Finder") { model.reveal([file] + copies) }
+                }
+            }
+            Button("Search DJ Folder…") { openSearch() }
+        }
+    }
+
+    /// Other copies of the picked file's recording, when the pick is the matcher's own.
+    private var copies: [String] {
+        row.pick != nil && row.pick == row.result.best?.track.file ? row.result.dupes : []
     }
 
     @ViewBuilder private var statusIcon: some View {

@@ -462,11 +462,18 @@ struct TrackRow: View {
                             .help(
                                 "An earlier song in this playlist uses the same file, so it'll be in the export twice.")
                     }
-                    if row.pick == row.result.best?.track.file, !row.result.dupes.isEmpty {
-                        Image(systemName: "doc.on.doc")
-                            .help(
-                                "Also in your library at:\n" + row.result.dupes.joined(separator: "\n")
-                                    + "\nMake sure the one used is the copy Rekordbox has.")
+                    if !copies.isEmpty {
+                        Button {
+                            model.reveal([row.pick!] + copies)
+                        } label: {
+                            Image(systemName: "doc.on.doc")
+                        }
+                        .buttonStyle(.borderless)
+                        .help(
+                            "Also in your DJ folder at:\n" + copies.joined(separator: "\n")
+                                + "\nClick to show every copy in Finder. Check which one Rekordbox uses before you delete any."
+                        )
+                        .accessibilityLabel("Show every copy in Finder")
                     }
                     Text(row.picked?.filename ?? (row.state == .missing ? "Not found" : "Skipped"))
                         .lineLimit(1).truncationMode(.middle)
@@ -501,6 +508,20 @@ struct TrackRow: View {
             }
         }
         .padding(.vertical, 3)
+        .contextMenu {
+            if let file = row.picked?.file {
+                Button("Show in Finder") { model.reveal([file]) }
+                if !copies.isEmpty {
+                    Button("Show Every Copy in Finder") { model.reveal([file] + copies) }
+                }
+            }
+            Button("Search DJ Folder…") { openSearch() }
+        }
+    }
+
+    /// Other copies of the picked file's recording, when the pick is the matcher's own.
+    private var copies: [String] {
+        row.pick != nil && row.pick == row.result.best?.track.file ? row.result.dupes : []
     }
 
     @ViewBuilder private var statusIcon: some View {

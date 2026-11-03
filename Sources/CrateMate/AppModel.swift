@@ -389,6 +389,11 @@ enum ScanState: Equatable {
         NSWorkspace.shared.activateFileViewerSelecting(exported)
     }
 
+    /// Selects the files in Finder. Only reveals them: CrateMate never changes the DJ folder.
+    func reveal(_ files: [String]) {
+        NSWorkspace.shared.activateFileViewerSelecting(files.map { URL(fileURLWithPath: $0) })
+    }
+
     private func pickFolder(message: String) -> URL? {
         let panel = NSOpenPanel()
         panel.message = message

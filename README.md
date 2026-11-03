@@ -123,7 +123,7 @@ You can always fall back to a Unicode Text export (⌘O); see [Without Apple Mus
 <details>
 <summary><b>Rekordbox imports the playlist but adds new tracks instead of linking existing ones</b></summary>
 
-Rekordbox links an imported entry only if the path is exactly that of a file already in its collection. Make sure the DJ folder in CrateMate is the folder your Rekordbox collection points at. If a row shows the duplicate icon, choose the copy Rekordbox has.
+Rekordbox links an imported entry only if the path is exactly that of a file already in its collection. Make sure the DJ folder in CrateMate is the folder your Rekordbox collection points at. If a row shows the duplicate icon, choose the copy Rekordbox has. Click the icon to see every copy in Finder, or Control-click a row and choose Show in Finder. Before you delete a copy, check which one Rekordbox uses: deleting that one loses its cue points and beat grid.
 </details>
 
 <details>

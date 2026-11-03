@@ -93,6 +93,8 @@ Two files count as **the same recording** if their core titles and version token
 
 `candidates` lists up to 6 files scoring at least 0.35, best first. They fill the row's picker.
 
+`differences(_:_:)` explains a match that's worth a check. It lists how a file differs from the song: the version words, the core title, the artist (no name in common, or missing on either side), and a length more than 3 s apart. The app turns them into the row's reason line, e.g. "Different version, 0:44 longer". When a close runner-up caused the check, the reason names that file instead.
+
 ### Search
 
 `search(_:limit:)` backs the 🔍 popover. It splits the query into words and keeps files where any query word is a prefix of a word in the artist, title or filename. Results are ranked by the share of query words that hit, then by title.

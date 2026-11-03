@@ -31,12 +31,18 @@ struct ContentView: View {
                 Button {
                     model.export()
                 } label: {
-                    Label("Export", systemImage: "square.and.arrow.up")
+                    Label(
+                        model.exportable.count > 1 ? "Export \(model.exportable.count) Playlists" : "Export",
+                        systemImage: "square.and.arrow.up")
                 }
-                .help("Write an .m3u8 for each selected playlist to \(model.outputPath)")
+                .labelStyle(.titleAndIcon)
+                .buttonStyle(.borderedProminent)
+                .help("Save an .m3u8 for each selected playlist in \(model.outputPath)")
                 .disabled(!model.canExport)
             }
         }
+        .navigationTitle(windowTitle)
+        .navigationSubtitle(windowSubtitle)
         .alert(
             exportedTitle,
             isPresented: Binding(get: { !model.exported.isEmpty }, set: { if !$0 { model.exported = [] } })
@@ -49,6 +55,9 @@ struct ContentView: View {
         } message: {
             Text(
                 "Saved to \((model.outputPath as NSString).abbreviatingWithTildeInPath). In Rekordbox, choose File › Import › Import Playlist, or drag the file onto Playlists."
+                    + (model.leftOut.isEmpty
+                        ? ""
+                        : "\n\nLeft out \(model.leftOut.joined(separator: ", ")), with no songs to export.")
             )
         }
         .alert(
@@ -59,6 +68,22 @@ struct ContentView: View {
         } message: {
             Text(model.errorMessage ?? "")
         }
+    }
+
+    private var windowTitle: String {
+        switch model.selectedPlaylists.count {
+        case 0: return "CrateMate"
+        case 1: return model.selectedPlaylists[0].name
+        case let n: return "\(n) Playlists"
+        }
+    }
+
+    private var windowSubtitle: String {
+        let reviews = model.selectedPlaylists.compactMap { model.reviews[$0.id] }
+        guard !reviews.isEmpty else { return "" }
+        let songs = reviews.reduce(0) { $0 + $1.rows.count }
+        let exported = reviews.reduce(0) { $0 + $1.exportTracks.count }
+        return "\(exported) of \(songs) songs in export"
     }
 
     private var exportedTitle: String {
@@ -300,15 +325,20 @@ struct PlaylistSection: View {
 
     var body: some View {
         let rows = showAll ? review.rows : review.rows.filter(\.needsAttention)
+        let repeated = review.repeatedRows
         Section {
-            if rows.isEmpty {
+            if review.noneFound && !showAll {
+                NoneFound(review: review)
+            } else if rows.isEmpty {
                 Label(
                     review.rows.allSatisfy { $0.result.status == .ok } ? "Everything matched" : "Nothing left to check",
                     systemImage: "checkmark.circle"
                 )
                 .foregroundStyle(.secondary)
             }
-            ForEach(rows) { TrackRow(row: $0) }
+            if showAll || !review.noneFound {
+                ForEach(rows) { TrackRow(row: $0, repeated: repeated.contains($0.id)) }
+            }
         } header: {
             HStack(spacing: 14) {
                 Text(review.playlist.name).font(.headline).foregroundStyle(.primary)
@@ -328,7 +358,7 @@ struct PlaylistSection: View {
                 .labelStyle(.titleAndIcon)
                 Text("\(review.exportTracks.count) of \(review.rows.count) in export")
                     .foregroundStyle(.secondary)
-                if review.leftToCheck > 0 {
+                if review.leftToCheck > 0 && !review.noneFound {
                     Button("Accept All") {
                         withAnimation { model.acceptAll(in: review) }
                     }
@@ -342,9 +372,41 @@ struct PlaylistSection: View {
     }
 }
 
+/// Shown instead of a wall of red rows when nothing in the playlist is in the DJ folder.
+struct NoneFound: View {
+    @Environment(AppModel.self) private var model
+    let review: PlaylistReview
+
+    var body: some View {
+        let n = review.rows.count
+        VStack(alignment: .leading, spacing: 6) {
+            Label {
+                Text(n == 1 ? "This song isn't in your DJ folder" : "None of these \(n) songs are in your DJ folder")
+            } icon: {
+                Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
+            }
+            .font(.headline)
+            Text(
+                "If you expected some, check that the DJ folder at the bottom of the sidebar is the one your Rekordbox collection uses."
+            )
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            HStack {
+                Button(n == 1 ? "Copy Song" : "Copy Song List") { model.copyNotFound(in: review) }
+                    .help("Copy the artist and title of each song, one per line")
+                Button("Show Songs") { model.showAll = true }
+            }
+            .padding(.top, 4)
+        }
+        .padding(.vertical, 8)
+    }
+}
+
 struct TrackRow: View {
     @Environment(AppModel.self) private var model
     @Bindable var row: RowReview
+    /// The file is already used by an earlier row in this playlist.
+    var repeated = false
 
     var body: some View {
         HStack(spacing: 10) {
@@ -353,6 +415,15 @@ struct TrackRow: View {
                 Text(row.src.title).lineLimit(1)
                 Text("\(row.src.artist.isEmpty ? "Unknown artist" : row.src.artist) · \(fmtDur(row.src.duration))")
                     .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                if let reason = row.reason {
+                    Label {
+                        Text(reason).foregroundStyle(.secondary)
+                    } icon: {
+                        Image(systemName: "info.circle").foregroundStyle(.orange)
+                    }
+                    .font(.caption).lineLimit(2)
+                    .help(reason)
+                }
             }
             .frame(minWidth: 160, maxWidth: .infinity, alignment: .leading)
 
@@ -368,6 +439,11 @@ struct TrackRow: View {
                 .fillWidth()
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 HStack(spacing: 4) {
+                    if repeated {
+                        Image(systemName: "repeat")
+                            .help(
+                                "An earlier song in this playlist uses the same file, so it'll be in the export twice.")
+                    }
                     if row.pick == row.result.best?.track.file, !row.result.dupes.isEmpty {
                         Image(systemName: "doc.on.doc")
                             .help(
@@ -402,7 +478,7 @@ struct TrackRow: View {
             }
             .buttonStyle(.borderless)
             .help("Search your DJ folder")
-            .popover(isPresented: $row.searching, arrowEdge: .trailing) {
+            .popover(isPresented: $row.searching, arrowEdge: .leading) {
                 LibrarySearch(row: row)
             }
         }
@@ -432,7 +508,7 @@ struct TrackRow: View {
 
     private func optionLabel(_ t: LibraryTrack) -> String {
         var s = "\(t.artist.isEmpty ? "?" : t.artist) – \(t.title) · \(fmtDur(t.duration))"
-        if let score = row.scores[t.file] { s += " · \(Int((score * 100).rounded()))%" }
+        if let score = row.scores[t.file] { s += " · \(percent(score))" }
         return s
     }
 

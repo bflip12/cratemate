@@ -333,6 +333,8 @@ struct ReviewList: View {
             }
         }
         .listStyle(.inset)
+        // A fresh table per selection: reused rows keep the old playlist's row heights and draw squashed.
+        .id(model.selectedPlaylists.map(\.id))
     }
 }
 
@@ -358,35 +360,57 @@ struct PlaylistSection: View {
                 ForEach(rows) { TrackRow(row: $0, repeated: repeated.contains($0.id)) }
             }
         } header: {
-            HStack(spacing: 14) {
-                Text(review.playlist.name).font(.headline).foregroundStyle(.primary)
-                Spacer()
-                Group {
-                    Label("\(review.count(.matched))", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-                        .help("Matched")
-                    Label("\(review.count(.check))", systemImage: "questionmark.circle.fill").foregroundStyle(.orange)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 14) {
+                    Text(review.playlist.name).font(.headline).foregroundStyle(.primary)
+                    Spacer()
+                    Group {
+                        Label("\(review.count(.matched))", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                            .help("Matched")
+                        Label("\(review.count(.check))", systemImage: "questionmark.circle.fill").foregroundStyle(
+                            .orange
+                        )
                         .help("Probably right, worth a check")
-                    Label("\(review.count(.missing))", systemImage: "xmark.circle.fill").foregroundStyle(.red)
-                        .help("Not found in your DJ folder")
-                    if review.count(.skipped) > 0 {
-                        Label("\(review.count(.skipped))", systemImage: "minus.circle").foregroundStyle(.secondary)
-                            .help("Skipped")
+                        Label("\(review.count(.missing))", systemImage: "xmark.circle.fill").foregroundStyle(.red)
+                            .help("Not found in your DJ folder")
+                        if review.count(.skipped) > 0 {
+                            Label("\(review.count(.skipped))", systemImage: "minus.circle").foregroundStyle(.secondary)
+                                .help("Skipped")
+                        }
+                    }
+                    .labelStyle(.titleAndIcon)
+                    Text("\(review.exportTracks.count) of \(review.rows.count) in export")
+                        .foregroundStyle(.secondary)
+                    if review.leftToCheck > 0 && !review.noneFound {
+                        Button("Accept All") {
+                            withAnimation { model.acceptAll(in: review) }
+                        }
+                        .controlSize(.small)
+                        .help("Keep the current choice for every song left to check")
                     }
                 }
-                .labelStyle(.titleAndIcon)
-                Text("\(review.exportTracks.count) of \(review.rows.count) in export")
-                    .foregroundStyle(.secondary)
-                if review.leftToCheck > 0 && !review.noneFound {
-                    Button("Accept All") {
-                        withAnimation { model.acceptAll(in: review) }
-                    }
-                    .controlSize(.small)
-                    .help("Keep the current choice for every song left to check")
+                .font(.callout.monospacedDigit())
+                .padding(.vertical, 4)
+                if !rows.isEmpty && (showAll || !review.noneFound) {
+                    ColumnHeadings()
                 }
             }
-            .font(.callout.monospacedDigit())
-            .padding(.vertical, 4)
         }
+    }
+}
+
+/// "Apple Music" and "DJ folder" over the two halves of the rows below.
+struct ColumnHeadings: View {
+    var body: some View {
+        HStack(spacing: 10) {
+            Color.clear.frame(width: 18, height: 1)
+            Text("Apple Music").frame(minWidth: 140, maxWidth: .infinity, alignment: .leading)
+            Color.clear.frame(width: 14, height: 1)
+            Text("DJ folder").frame(minWidth: 200, maxWidth: .infinity, alignment: .leading)
+            Color.clear.frame(width: TrackRow.actionsWidth, height: 1)
+        }
+        .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+        .padding(.bottom, 2)
     }
 }
 
@@ -420,76 +444,136 @@ struct NoneFound: View {
     }
 }
 
+/// One song: what Apple Music has on the left, and the DJ folder file it's matched to on the right.
 struct TrackRow: View {
+    /// Width of the icons at the end of a row, which the column headings leave room for.
+    static let actionsWidth: CGFloat = 92
+
     @Environment(AppModel.self) private var model
     @Bindable var row: RowReview
     /// The file is already used by an earlier row in this playlist.
     var repeated = false
 
     var body: some View {
-        HStack(spacing: 10) {
-            statusIcon.frame(width: 18)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(row.src.title).lineLimit(1)
-                Text("\(row.src.artist.isEmpty ? "Unknown artist" : row.src.artist) · \(fmtDur(row.src.duration))")
+        let diffs = row.needsAttention ? row.picked.map { differences(row.src, $0) } ?? [] : []
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 10) {
+                statusIcon.frame(width: 18)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(row.src.title).lineLimit(1)
+                    Text(
+                        marked(
+                            row.src.artist.isEmpty ? "Unknown artist" : row.src.artist, diffs.contains(.noSongArtist))
+                            + AttributedString(" · \(fmtDur(row.src.duration))")
+                    )
                     .font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                if let reason = row.reason {
-                    Label {
-                        Text(reason).foregroundStyle(.secondary)
-                    } icon: {
-                        Image(systemName: "info.circle").foregroundStyle(.orange)
-                    }
-                    .font(.caption).lineLimit(2)
+                }
+                .frame(minWidth: 140, maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "arrow.right").foregroundStyle(.tertiary).frame(width: 14)
+                fileCell(diffs).frame(minWidth: 200, maxWidth: .infinity)
+                actions.frame(width: Self.actionsWidth, alignment: .trailing)
+            }
+            if let reason = row.reason {
+                Text(reason).font(.caption).foregroundStyle(Color.warning).lineLimit(2)
+                    .padding(.leading, 28)
                     .help(reason)
+            }
+        }
+        .padding(.vertical, 3)
+        .contextMenu {
+            Button("Change File…") { row.panel = .choose }
+            Button("Search DJ Folder…") { row.openSearch() }
+            if let file = row.picked?.file {
+                Divider()
+                Button("Show in Finder") { model.reveal([file]) }
+                if !copies.isEmpty {
+                    Button("Show Every Copy in Finder") { model.reveal([file] + copies) }
                 }
             }
-            .frame(minWidth: 160, maxWidth: .infinity, alignment: .leading)
+        }
+    }
 
-            VStack(alignment: .trailing, spacing: 2) {
-                Picker("Match", selection: pickBinding) {
-                    ForEach(row.options) { t in
-                        Text(optionLabel(t)).tag(Optional(t.file))
-                    }
-                    if !row.options.isEmpty { Divider() }
-                    Text("Skip").tag(String?.none)
-                }
-                .labelsHidden()
-                .fillWidth()
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                HStack(spacing: 4) {
-                    if repeated {
-                        Image(systemName: "repeat")
-                            .help(
-                                "An earlier song in this playlist uses the same file, so it'll be in the export twice.")
-                    }
-                    if !copies.isEmpty {
-                        Button {
-                            model.reveal([row.pick!] + copies)
-                        } label: {
-                            Image(systemName: "doc.on.doc")
+    /// The matched file, as a button that opens the other choices.
+    private func fileCell(_ diffs: [Difference]) -> some View {
+        let picked = row.picked
+        return Button {
+            row.panel = .choose
+        } label: {
+            HStack(spacing: 6) {
+                if let t = picked {
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 6) {
+                            Text(fileTitle(t, diffs)).lineLimit(1)
+                            if let score = row.scores[t.file] {
+                                Text(percent(score))
+                                    .font(.caption2.weight(.semibold)).monospacedDigit().foregroundStyle(.secondary)
+                                    .padding(.horizontal, 5).padding(.vertical, 1)
+                                    .background(.quaternary, in: RoundedRectangle(cornerRadius: 4))
+                            }
                         }
-                        .buttonStyle(.borderless)
-                        .help(
-                            "Also in your DJ folder at:\n" + copies.joined(separator: "\n")
-                                + "\nClick to show every copy in Finder. Check which one Rekordbox uses before you delete any."
+                        Text(
+                            marked(
+                                t.artist.isEmpty ? "Unknown artist" : t.artist,
+                                diffs.contains(.artist) || diffs.contains(.noFileArtist))
+                                + AttributedString(" · ")
+                                + marked(
+                                    fmtDur(t.duration), diffs.contains { if case .length = $0 { true } else { false } })
+                                + AttributedString(" · \(t.filename)")
                         )
-                        .accessibilityLabel("Show every copy in Finder")
+                        .font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
                     }
-                    Text(row.picked?.filename ?? (row.state == .missing ? "Not found" : "Skipped"))
-                        .lineLimit(1).truncationMode(.middle)
-                        .help(row.picked?.file ?? "")
+                } else {
+                    Text(row.state == .missing ? "Not in your DJ folder" : "Skipped").foregroundStyle(.secondary)
                 }
-                .font(.caption).foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.down").font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
             }
-            .frame(width: 380)
+            .padding(.horizontal, 10).padding(.vertical, 5)
+            .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
+            .background(
+                picked == nil ? AnyShapeStyle(.quinary) : AnyShapeStyle(.background),
+                in: RoundedRectangle(cornerRadius: 6)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 6).strokeBorder(
+                    Color(nsColor: .separatorColor),
+                    style: StrokeStyle(lineWidth: 1, dash: picked == nil ? [3, 2] : []))
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(picked?.file ?? "Choose a file")
+        .accessibilityLabel(picked.map { "Matched to \($0.label), \($0.filename)" } ?? "No file")
+        .accessibilityHint("Choose a different file")
+        .popover(isPresented: panelShown, arrowEdge: .bottom) {
+            if row.panel == .search { LibrarySearch(row: row) } else { FileChoices(row: row) }
+        }
+    }
 
+    private var actions: some View {
+        HStack(spacing: 8) {
+            if repeated {
+                Image(systemName: "repeat").foregroundStyle(.secondary)
+                    .help("An earlier song in this playlist uses the same file, so it'll be in the export twice.")
+            }
+            if !copies.isEmpty {
+                Button {
+                    model.reveal([row.pick!] + copies)
+                } label: {
+                    Image(systemName: "doc.on.doc")
+                }
+                .help(
+                    "Also in your DJ folder at:\n" + copies.joined(separator: "\n")
+                        + "\nClick to show every copy in Finder. Check which one Rekordbox uses before you delete any."
+                )
+                .accessibilityLabel("Show every copy in Finder")
+            }
             // Hidden rather than removed once decided, so the columns stay lined up.
             Button {
                 withAnimation { model.decide(row, row.picked) }
             } label: {
                 Image(systemName: row.pick == nil ? "minus.circle" : "checkmark")
             }
-            .buttonStyle(.borderless)
             .help(row.pick == nil ? "Leave it out of the export" : "Keep this match")
             .accessibilityLabel(row.pick == nil ? "Skip" : "Keep match")
             .opacity(row.needsAttention ? 1 : 0)
@@ -497,31 +581,36 @@ struct TrackRow: View {
             .accessibilityHidden(!row.needsAttention)
 
             Button {
-                openSearch()
+                row.openSearch()
             } label: {
                 Image(systemName: "magnifyingglass")
             }
-            .buttonStyle(.borderless)
             .help("Search your DJ folder")
-            .popover(isPresented: $row.searching, arrowEdge: .leading) {
-                LibrarySearch(row: row)
-            }
         }
-        .padding(.vertical, 3)
-        .contextMenu {
-            if let file = row.picked?.file {
-                Button("Show in Finder") { model.reveal([file]) }
-                if !copies.isEmpty {
-                    Button("Show Every Copy in Finder") { model.reveal([file] + copies) }
+        .buttonStyle(.borderless)
+    }
+
+    private var panelShown: Binding<Bool> {
+        Binding(
+            get: { row.panel != nil },
+            set: { shown in
+                if !shown {
+                    row.panel = nil
+                    row.hovered = nil
                 }
-            }
-            Button("Search DJ Folder…") { openSearch() }
-        }
+            })
     }
 
     /// Other copies of the picked file's recording, when the pick is the matcher's own.
     private var copies: [String] {
         row.pick != nil && row.pick == row.result.best?.track.file ? row.result.dupes : []
+    }
+
+    /// The file's title, with the version words or the whole title marked if they differ from the song's.
+    private func fileTitle(_ t: LibraryTrack, _ diffs: [Difference]) -> AttributedString {
+        if diffs.contains(.title) { return marked(t.title, true) }
+        guard diffs.contains(.version), let start = versionStart(t.title) else { return AttributedString(t.title) }
+        return AttributedString(String(t.title[..<start])) + marked(String(t.title[start...]), true)
     }
 
     @ViewBuilder private var statusIcon: some View {
@@ -534,31 +623,128 @@ struct TrackRow: View {
         case .skipped: Image(systemName: "minus.circle").foregroundStyle(.secondary)
         }
     }
+}
 
-    /// Choosing from the menu counts as a decision, even when it's the file already picked.
-    private var pickBinding: Binding<String?> {
-        Binding(
-            get: { row.pick },
-            set: { file in
-                let track = file.flatMap { f in row.options.first { $0.file == f } }
-                withAnimation { model.decide(row, track) }
-            })
+/// Where a title's remix or edit words start: at "(", "[" or " - ".
+private func versionStart(_ title: String) -> String.Index? {
+    [title.firstIndex(of: "("), title.firstIndex(of: "["), title.range(of: " - ")?.lowerBound].compactMap { $0 }.min()
+}
+
+/// `text`, with an orange highlight if `on`, for a part of a match that differs from the song.
+private func marked(_ text: String, _ on: Bool) -> AttributedString {
+    var a = AttributedString(text)
+    if on {
+        a.backgroundColor = Color.orange.opacity(0.22)
+        a.foregroundColor = .primary
     }
+    return a
+}
 
-    private func optionLabel(_ t: LibraryTrack) -> String {
-        var s = "\(t.artist.isEmpty ? "?" : t.artist) – \(t.title) · \(fmtDur(t.duration))"
-        if let score = row.scores[t.file] { s += " · \(percent(score))" }
-        return s
-    }
+/// The popover behind a row's file cell: every candidate in aligned columns, then search and skip.
+struct FileChoices: View {
+    @Environment(AppModel.self) private var model
+    let row: RowReview
 
-    /// Prefill with artist and title minus "(… Mix)" noise, so the search is broad enough.
-    private func openSearch() {
-        if row.searchQuery.isEmpty {
-            let title = row.src.title.components(separatedBy: CharacterSet(charactersIn: "([")).first ?? row.src.title
-            row.searchQuery = "\(row.src.artist) \(title)".trimmingCharacters(in: .whitespaces)
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if !row.options.isEmpty {
+                HStack(spacing: 8) {
+                    Color.clear.frame(width: 14, height: 1)
+                    Text("File").frame(maxWidth: .infinity, alignment: .leading)
+                    Text("Length").frame(width: 84, alignment: .trailing)
+                    Text("Score").frame(width: 40, alignment: .trailing)
+                }
+                .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                .padding(.horizontal, 10).padding(.top, 4).padding(.bottom, 4)
+                ForEach(row.options) { t in
+                    item(t.file, label: "Use \(t.label)") {
+                        choose(t)
+                    } content: { lit in
+                        fileItem(t, lit)
+                    }
+                }
+                Divider().padding(.horizontal, 10).padding(.vertical, 5)
+            }
+            command("Search DJ Folder…") { row.openSearch() }
+            command("Skip This Song") { choose(nil) }
         }
-        row.searching = true
+        .padding(6)
+        .frame(width: 480)
     }
+
+    private func fileItem(_ t: LibraryTrack, _ lit: Bool) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "checkmark").font(.caption.weight(.bold))
+                .opacity(row.pick == t.file ? 1 : 0).frame(width: 14)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("\(t.artist.isEmpty ? "Unknown artist" : t.artist) – \(t.title)").lineLimit(1)
+                Text(t.filename).font(.caption).opacity(lit ? 0.85 : 1)
+                    .foregroundStyle(lit ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                    .lineLimit(1).truncationMode(.middle)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 4) {
+                Text(fmtDur(t.duration))
+                if let diff = lengthDiff(t) {
+                    Text(diff).font(.caption).foregroundStyle(
+                        lit ? AnyShapeStyle(.primary) : AnyShapeStyle(Color.warning))
+                }
+            }
+            .frame(width: 84, alignment: .trailing)
+            Text(row.scores[t.file].map(percent) ?? "").frame(width: 40, alignment: .trailing)
+        }
+        .monospacedDigit()
+    }
+
+    private func command(_ title: String, action: @escaping () -> Void) -> some View {
+        item(title, label: title, action: action) { _ in
+            Text(title).padding(.leading, 22).frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    /// A menu-like item: highlighted under the pointer, closing the popover when chosen.
+    private func item(
+        _ key: String, label: String, action: @escaping () -> Void, @ViewBuilder content: (Bool) -> some View
+    ) -> some View {
+        let lit = row.hovered == key
+        return Button(action: action) {
+            content(lit)
+                .foregroundStyle(lit ? Color.white : Color.primary)
+                .padding(.horizontal, 10).padding(.vertical, 5)
+                .background(lit ? Color.accentColor : .clear, in: RoundedRectangle(cornerRadius: 6))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .onHover { inside in
+            if inside {
+                row.hovered = key
+            } else if row.hovered == key {
+                row.hovered = nil
+            }
+        }
+    }
+
+    private func choose(_ t: LibraryTrack?) {
+        row.panel = nil
+        row.hovered = nil
+        withAnimation { model.decide(row, t) }
+    }
+
+    /// "+0:44" or "−0:17" against the song's length, past the 3 s that counts as the same.
+    private func lengthDiff(_ t: LibraryTrack) -> String? {
+        guard let s = row.src.duration, let f = t.duration, s > 0, f > 0, abs(f - s) > 3 else { return nil }
+        return "\(f > s ? "+" : "−")\(fmtDur(abs(f - s)))"
+    }
+}
+
+extension Color {
+    /// Orange text that stays readable on a light background.
+    fileprivate static let warning = Color(
+        nsColor: NSColor(name: nil) { appearance in
+            appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+                ? .systemOrange : NSColor(srgbRed: 0.70, green: 0.31, blue: 0, alpha: 1)
+        })
 }
 
 struct LibrarySearch: View {
@@ -577,7 +763,7 @@ struct LibrarySearch: View {
             } else {
                 List(results) { t in
                     Button {
-                        row.searching = false
+                        row.panel = nil
                         withAnimation { model.decide(row, t) }
                     } label: {
                         VStack(alignment: .leading, spacing: 1) {
@@ -596,13 +782,5 @@ struct LibrarySearch: View {
         }
         .padding(12)
         .frame(width: 420)
-    }
-}
-
-extension View {
-    /// Stretches a menu picker to the width it's offered, so every row's picker is the same size.
-    /// Before macOS 26 a menu picker always sizes to its label.
-    @ViewBuilder fileprivate func fillWidth() -> some View {
-        if #available(macOS 26, *) { buttonSizing(.flexible) } else { self }
     }
 }

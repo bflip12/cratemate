@@ -333,6 +333,8 @@ struct ReviewList: View {
             }
         }
         .listStyle(.inset)
+        // A fresh table per selection: reused rows keep the old playlist's row heights and draw squashed.
+        .id(model.selectedPlaylists.map(\.id))
     }
 }
 

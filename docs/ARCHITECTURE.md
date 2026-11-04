@@ -91,7 +91,7 @@ The length adjustment is what separates an Extended Mix from an Original Mix whe
 
 Two files count as **the same recording** if their core titles and version tokens are identical and their lengths are within a second of each other, or either length is unknown. Copies of the best match are reported as `dupes` rather than as runners-up, so owning a track twice doesn't stop it being a confident match. The UI warns about the duplicates instead.
 
-`candidates` lists up to 6 files scoring at least 0.35, best first. They fill the row's picker.
+`candidates` lists up to 6 files scoring at least 0.35, best first. They fill the list that opens from the row's file cell, with each one's length and score.
 
 `differences(_:_:)` explains a match that's worth a check. It lists how a file differs from the song: the version words, the core title, the artist (no name in common, or missing on either side), and a length more than 3 s apart. The app turns them into the row's reason line, e.g. "Different version, 0:44 longer". When a close runner-up caused the check, the reason names that file instead.
 
